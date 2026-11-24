@@ -21,7 +21,7 @@ TraceAssist* (Patel, Sehgal, Panahandeh, Tetreault, Ezzati-Jivan).
 |---|---|
 | **this repository** | The benchmark as release tables (`dataset/`), every system's verdicts and answers, and the analyses reported in the paper (`analysis/`) |
 | [sneh2001patel/traceassist-icpe2027](https://github.com/sneh2001patel/traceassist-icpe2027) | TraceAssist's code (frozen build), the bench programs and recording scripts, the baselines, the raw results and the scorer |
-| Zenodo (DOI to be added) | The 56 trace archives and the baselines' inputs |
+| this repository (to be added) | The 56 trace archives and the baselines' inputs |
 
 ## `dataset/`
 
@@ -37,7 +37,7 @@ TraceAssist* (Patel, Sehgal, Panahandeh, Tetreault, Ezzati-Jivan).
 
 The benchmark can be regenerated on another machine and kernel with the programs and
 `capture.sh` in the code repository; each new recording writes a fresh answer key. The 56 traces on
-Zenodo are the reference set for the paper's results.
+this repository (once added) are the reference set for the paper's results.
 
 ## `analysis/`
 
