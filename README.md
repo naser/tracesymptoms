@@ -46,8 +46,8 @@ this repository (once added) are the reference set for the paper's results.
 - `content_audit/`: grading of 60 matched present answers per system against the answer keys.
   The sample (`sample.json`, fixed seed, hash in `sample_hash.txt`) and the rubric (`RUBRIC.md`) were
   fixed before grading. Two graders (a GPT-6 model and a Claude model) graded blind to the system
-  (`grades_*.json`; `blind_mapping.json` maps A/B to systems); the authors resolved the 18
-  disagreements (`adjudicated.json`). `final.py` gives
+  (`grades_*.json`; `blind_mapping.json` maps A/B to systems); the authors reviewed the grades and
+  decided the 18 of 120 cases where the graders differed (`adjudicated.json`). `final.py` gives
   the reported numbers (`final_results.json`).
 - `soundness/`: cluster-bootstrap confidence intervals, strict scoring and sensitivity checks.
 
