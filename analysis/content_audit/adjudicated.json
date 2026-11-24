@@ -1,0 +1,182 @@
+[
+  {
+    "case": "Q16a__crunch-a6c0::B",
+    "location": "wrong",
+    "cause": "partly",
+    "numbers": "missing",
+    "fix": "n/a",
+    "overall": "wrong",
+    "agrees_with": "neither",
+    "reason": "The answer recognizes calc-0's roughly fourfold CPU work but explicitly denies its responsibility for the delay and omits the keyed round-time comparison."
+  },
+  {
+    "case": "Q18b__kvstore-4bd0::B",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "partly",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer traces client waiting to kvd and reports approximately 12 ms waits, but omits single-CPU server saturation, 3 ms server work, and the healthy latency."
+  },
+  {
+    "case": "Q26b__batch_server-41b3::B",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "n/a",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer specifically identifies worker-1 and worker-3 as deadlock participants despite leading with the flusher, but does not explain their reciprocal lock ownership and waits."
+  },
+  {
+    "case": "Q27a__kvstore-226c::A",
+    "location": "correct",
+    "cause": "correct",
+    "numbers": "correct",
+    "fix": "n/a",
+    "overall": "full",
+    "agrees_with": "grader_2",
+    "reason": "The answer identifies all clients and unanswered connection attempts lasting about 300 ms, with 30 attempts per client over roughly 30 seconds establishing the keyed average cadence."
+  },
+  {
+    "case": "Q27b__kvstore-226c::B",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "partly",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer explicitly puts client-0 on the critical path and reports approximately 300 ms client waits, but does not identify unanswered connection attempts or their once-per-second cadence."
+  },
+  {
+    "case": "Q28a__kvstore-5311::B",
+    "location": "correct",
+    "cause": "correct",
+    "numbers": "correct",
+    "fix": "n/a",
+    "overall": "full",
+    "agrees_with": "grader_2",
+    "reason": "The answer identifies all clients waiting on unanswered remote connection attempts for about 300 ms and 28.4% of their time, with roughly one attempt per second per client."
+  },
+  {
+    "case": "Q28a__kvstore-5311::A",
+    "location": "correct",
+    "cause": "correct",
+    "numbers": "correct",
+    "fix": "n/a",
+    "overall": "full",
+    "agrees_with": "grader_2",
+    "reason": "The answer identifies all clients, the keyed destination and timed-out connection polling, with approximately 300 ms waits occupying 29% of their time and about one attempt per second."
+  },
+  {
+    "case": "Q29a__filestore-b20a::B",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "correct",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The writer and its 34.2% sync-blocking share are correct, but the answer does not establish the per-record sync policy or the additional periodic checkpoint."
+  },
+  {
+    "case": "Q29b__filestore-b20a::A",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "correct",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer identifies the writer and a sync-time share within the accepted range, but omits the per-record sync policy and periodic checkpoint."
+  },
+  {
+    "case": "Q29b__filestore-b20a::B",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "correct",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer describes repeated writer write-and-sync operations with a blocked share within tolerance, but omits the additional periodic checkpoint."
+  },
+  {
+    "case": "Q35b__pipeline-f460::B",
+    "location": "correct",
+    "cause": "correct",
+    "numbers": "n/a",
+    "fix": "n/a",
+    "overall": "full",
+    "agrees_with": "grader_2",
+    "reason": "The answer identifies parser-to-sink queues filling and draining in bursts and traces their pacing to the reader with approximately 400 ms timer gaps, capturing the keyed mechanism."
+  },
+  {
+    "case": "Q37a__ticker-8584::A",
+    "location": "missing",
+    "cause": "missing",
+    "numbers": "partly",
+    "fix": "n/a",
+    "overall": "wrong",
+    "agrees_with": "neither",
+    "reason": "The answer names neither keyed thread and supplies no maintenance-contention cause, while its correct 2 ms period accompanies a contradictory 0.057 ms maximum lateness and no keyed p99."
+  },
+  {
+    "case": "Q37a__ticker-8584::B",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "partly",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "neither",
+    "reason": "The answer identifies sampler delay with maintenance on the same CPU but omits the recurring real-time spin mechanism, and its correct 2 ms period accompanies an out-of-range 2.74 ms maximum and missing p99."
+  },
+  {
+    "case": "Q38a__ticker-2ea7::A",
+    "location": "correct",
+    "cause": "correct",
+    "numbers": "partly",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer correctly explains growing sampler work and period overruns, but only its final work value matches the keyed numerical comparison because the initial endpoint or first-half average is not supplied within tolerance."
+  },
+  {
+    "case": "Q40b__ticker-8584::B",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "wrong",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer correctly attributes sampler CPU waiting to maintenance but omits its recurring real-time spin mechanism, gives a 2.742 ms maximum outside the keyed range, and does not establish waits every few milliseconds."
+  },
+  {
+    "case": "Q4a__filestore-44a7::A",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "correct",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer correctly identifies writer segment-file churn at about 200 creations and deletions per second, but omits the per-record 4 KB writes and deletion of files from 100 records earlier."
+  },
+  {
+    "case": "Q6b__jobrunner-72e6::B",
+    "location": "correct",
+    "cause": "partly",
+    "numbers": "correct",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer correctly identifies job-2's unfinished pipe read from about 12 seconds onward, but does not establish completed-work shutdown or the main thread joining that worker."
+  },
+  {
+    "case": "Q9b__jobrunner-51ee::A",
+    "location": "correct",
+    "cause": "correct",
+    "numbers": "partly",
+    "fix": "n/a",
+    "overall": "partial",
+    "agrees_with": "grader_1",
+    "reason": "The answer correctly identifies worker forks, execution of /usr/bin/true and 2,998 children, but supplies neither the keyed creation rate nor a duration from which to derive it."
+  }
+]

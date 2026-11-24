@@ -1,0 +1,13 @@
+system  BA  strictSpec(no only)  BA_strict  BA_no_batch_server  BA_precise
+llm_only     0.583 0.138 0.211 0.587 0.578
+rag          0.582 0.166 0.221 0.578 0.561
+tmll         0.690 0.329 0.441 0.698 0.679
+codex        0.794 0.587 0.746 0.808 0.842
+traceassist  0.929 0.896 0.911 0.940 0.963
+llm_only BA 95% CI (cluster bootstrap by question): 0.53-0.63
+rag BA 95% CI (cluster bootstrap by question): 0.54-0.62
+tmll BA 95% CI (cluster bootstrap by question): 0.64-0.74
+codex BA 95% CI (cluster bootstrap by question): 0.74-0.84
+traceassist BA 95% CI (cluster bootstrap by question): 0.90-0.96
+TraceAssist - Codex BA diff 95% CI: 0.082-0.191
+paired absent answers: TA-only FP 8 Codex-only FP 97

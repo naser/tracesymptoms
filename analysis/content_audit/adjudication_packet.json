@@ -1,0 +1,652 @@
+[
+ {
+  "case": "Q16a__crunch-a6c0::B",
+  "question": "Does one thread of crunch hold up the whole program, so that the program would run at least 25% faster without that thread's delay? If so, which thread, and why is it slow?",
+  "fault_summary": "calc-0 gets 4x the work (40 ms per round) and the other seven get 10 ms, every round; the others finish early and wait at the barrier for calc-0",
+  "expected": {
+   "where_any": [
+    "calc-0"
+   ],
+   "where_all": [],
+   "cause": "calc-0 gets 4x the work of the others (40 ms per round against 10 ms) and every round waits for it at the barrier",
+   "numbers": [
+    "rounds take ~41 ms against ~10.5 ms healthy (\u00b125%)"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: no\n\n`crunch` (PID/TID 633755) runs for about 30.018 seconds, but the trace points to a timed run, not one worker extending the program. Its watchdog, TID 633756, sleeps in `clock_nanosleep` for 29.942 seconds. The main thread also spends 17.787 seconds in 299 `clock_nanosleep` calls and 12.149 seconds in `futex` calls. Together those waits account for nearly the whole run.\n\nThe slowest-looking worker is `calc-0` (TID 633757, CPU 4): it uses 12.134 seconds of CPU, compared with about 3.09\u20133.14 seconds for each of `calc-1` through `calc-7` (TIDs 633758\u2013633764, CPUs 5\u201311). In a representative cycle, the other workers finish around 29.711 seconds while `calc-0` continues until 29.741 seconds. The main thread then waits until the next roughly 100 ms cycle at 29.801 seconds, leaving time after `calc-0` finishes.\n\nAt shutdown, the main thread wakes all eight workers; they exit within about 4 microseconds of one another, and `crunch` exits about 1 ms later. So `calc-0` does more CPU work, but the trace does not show it holding up the 30-second run. The kernel trace cannot identify why it receives or needs more CPU time; it does not include the worker\u2019s user-space code.",
+  "grader_1": {
+   "verdict": "no",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Recognizes calc-0's excess work but denies its round-level bottleneck and omits the round-time comparison."
+  },
+  "grader_2": {
+   "verdict": "no",
+   "location": "wrong",
+   "cause": "wrong",
+   "numbers": "wrong",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Notes calc-0's 4x CPU but denies it holds up the run; gives ~100 ms cycles."
+  }
+ },
+ {
+  "case": "Q18b__kvstore-4bd0::B",
+  "question": "Is there a bottleneck in kvstore? If so, which thread or process is it, and why?",
+  "fault_summary": "the server (process kvd) spends 3 ms per request instead of 0.1 ms, all on one CPU: the server is saturated and the clients spend most of their time blocked waiting for its replies",
+  "expected": {
+   "where_any": [
+    "kvd",
+    "kvd-conn-0",
+    "kvd-conn-1",
+    "kvd-conn-2",
+    "kvd-conn-3"
+   ],
+   "where_all": [],
+   "cause": "the server process kvd spends 3 ms per request instead of 0.1 ms, all on one CPU: it is saturated and the clients wait for its replies",
+   "numbers": [
+    "~3 ms of server work per request (\u00b130%); requests take ~12 ms against ~0.4 ms healthy"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: no\n\n## Bottleneck\n\nOver the whole trace (offsets **0\u201330,614.6 ms**), the analysis finds **no `kvstore` thread bottlenecking the others** (medium confidence). Most of the threads\u2019 waiting\u2014**66.5%**\u2014ended with network activity, not another `kvstore` thread.\n\nThe wait chain was: **TID 648040 (`kvstore`)** waited about **30,004 ms** in a futex wait until **TID 648043 (`client-0`)** woke it. `client-0` spent about **29,794 ms** across 2,482 network waits, averaging **12.004 ms** each; the trace attributes the packet wake-ups to **local process PID 648042 (`kvd`)**. Thus, the trace points to waiting on network exchanges with `kvd`, rather than an internal thread holding up the clients. The `kvd` attribution is medium confidence.\n\nAll four `client-*` threads were mostly blocked, but their CPU times were very similar (**47.4\u201347.8 ms** each), and the analysis found no difference among them.",
+  "grader_1": {
+   "verdict": "no",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Attributes client waits to kvd but omits server CPU saturation, per-request work, and healthy latency."
+  },
+  "grader_2": {
+   "verdict": "no",
+   "location": "partly",
+   "cause": "wrong",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Says no bottleneck; attributes client waits to network exchanges with kvd without saying kvd is saturated."
+  }
+ },
+ {
+  "case": "Q26b__batch_server-41b3::B",
+  "question": "Is some thread in batch_server blocked a lot? Which one, and what is it waiting for?",
+  "fault_summary": "at 40% of the run, worker-1 takes lock A then B while worker-3 takes B then A; both block forever, and the coordinator waits forever for the round",
+  "expected": {
+   "where_any": [
+    "worker-1",
+    "worker-3"
+   ],
+   "where_all": [],
+   "cause": "worker-1 holds lock A and waits for B; worker-3 holds B and waits for A; both stay blocked from ~12 s to the end (the coordinator, waiting for them, is a consequence)",
+   "numbers": [],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\nIn the whole trace (0\u201330,299 ms), **flusher (TID 626816)** was blocked for 99.3% of its alive time. It remained in a no-timeout `FUTEX_WAIT_BITSET` wait\u2014condition-variable, barrier, or semaphore-like\u2014starting at 12,114.761 ms, for 18,179.657 ms (60.0% of the trace). Its 292 earlier waits had a median of 40.622 ms and a longest of 100.287 ms.\n\nIt wasn\u2019t alone: the main thread and four workers also remained blocked in no-timeout futex waits for roughly 18.17\u201318.18 seconds. The trace reports that worker-1 and worker-3 were waiting on different mutex-style futexes and were never woken, a pattern **consistent with a deadlock**, though the trace cannot show lock ownership or prove it.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Identifies worker-1 and worker-3 as possible deadlock participants but omits reciprocal lock ownership."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Leads with the flusher; mentions worker-1/worker-3 possible deadlock only as secondary."
+  }
+ },
+ {
+  "case": "Q27a__kvstore-226c::A",
+  "question": "Is any thread of kvstore blocked for a quarter or more of its time, or for seconds at a time, while it has work to do (not counting idle waits for new work or its own timed sleeps)? If so, which thread, and what is it waiting on?",
+  "fault_summary": "once a second each client tries to reach a replica at 10.255.255.1:7070, which never answers, and waits 300 ms for the connection before giving up: the clients are blocked on the network ~30% of the time",
+  "expected": {
+   "where_any": [
+    "client-0",
+    "client-1",
+    "client-2",
+    "client-3"
+   ],
+   "where_all": [],
+   "cause": "the clients block in connect(): once a second each client tries to connect to a replica at 10.255.255.1:7070, which never answers, and gives up after 300 ms",
+   "numbers": [
+    "~300 ms each time (\u00b120%), once a second"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\n## Work-related blocking\n\nAcross the whole trace (offsets **0\u201330,660.98 ms**), all four client threads were blocked for at least a quarter of their time on network connection attempts:\n\n- **client-0 (TID 649382): 28.4%**\n- **client-1 (TID 649383): 28.4%**\n- **client-2 (TID 649384): 28.4%**\n- **client-3 (TID 649385): 28.4%**\n\nEach made 30 attempts; the 116 attempts overall timed out waiting for an answer from the other side. The mean wait was about **300 ms** and the longest was **300.84 ms**\u2014so these waits meet the quarter-time criterion, but are not seconds long. The trace does not identify the destination address.\n\nThe clients also spent about **68%** of their time in `clock_nanosleep`; those intentional timed sleeps are excluded.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Identifies timed-out client connections and their duration but omits the replica destination and explicit once-per-second cadence."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "All four clients ~28% blocked on connection attempts timing out at ~300 ms, 30 attempts (once a second)."
+  }
+ },
+ {
+  "case": "Q27b__kvstore-226c::B",
+  "question": "Is anything in kvstore stuck waiting a long time? Which thread, and on what?",
+  "fault_summary": "once a second each client tries to reach a replica at 10.255.255.1:7070, which never answers, and waits 300 ms for the connection before giving up: the clients are blocked on the network ~30% of the time",
+  "expected": {
+   "where_any": [
+    "client-0",
+    "client-1",
+    "client-2",
+    "client-3"
+   ],
+   "where_all": [],
+   "cause": "the clients block in connect(): once a second each client tries to connect to a replica at 10.255.255.1:7070, which never answers, and gives up after 300 ms",
+   "numbers": [
+    "~300 ms each time (\u00b120%), once a second"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\n## Long wait\n\nOver the whole trace (0\u201330,660.980 ms), **kvstore\u2019s main thread, TID 649379**, had a **30,002.259 ms wait in `futex`**, from about **90.768 ms to 30,093.026 ms**. It ended when **client-0 (TID 649382)** woke it. The traced wait chain indicates client-0\u2019s timer wait was on the critical path; its longest relevant timer activity was **300.806 ms**.\n\nA futex wait is commonly used for synchronization, such as a mutex or condition variable [1]. The trace shows this long wait, but does not identify the exact lock or condition. **This wait ended; the findings do not show a thread still waiting at the trace\u2019s end.** The watchdog\u2019s similarly long wait was in `clock_nanosleep`; the client threads\u2019 longest waits were roughly 300 ms in `poll`.\n\n## All sources used:\n1) Blocking in futex - https://man7.org/linux/man-pages/man2/futex.2.html",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Names client-0 in the wait chain and gives a three-hundred-millisecond wait but omits the unanswered replica connections and cadence."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Leads with the main thread's 30 s futex; clients' ~300 ms poll waits only mentioned in passing, no unreachable replica."
+  }
+ },
+ {
+  "case": "Q28a__kvstore-5311::B",
+  "question": "Does any thread of kvstore spend a quarter or more of its time blocked on network communication with another machine? If so, which thread, and how long are its waits?",
+  "fault_summary": "once a second each client tries to reach a replica at 10.255.255.1:7070, which never answers, and waits 300 ms for the connection before giving up: the clients are blocked on the network ~30% of the time",
+  "expected": {
+   "where_any": [
+    "client-0",
+    "client-1",
+    "client-2",
+    "client-3"
+   ],
+   "where_all": [],
+   "cause": "once a second each client tries to connect to a replica at 10.255.255.1:7070, which never answers, and gives up after 300 ms",
+   "numbers": [
+    "~300 ms per wait (\u00b120%), ~30% of each client's time"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\n## Network waits \u2014 whole trace (0\u201330,665 ms)\n\nAll four `kvstore` client threads spent about **28.4%** of their time waiting on connection attempts to another host, exceeding the 25% threshold:\n\n- `client-0` (TID 665848): 30 attempts\n- `client-1` (TID 665849): 30 attempts\n- `client-2` (TID 665850): 30 attempts\n- `client-3` (TID 665851): 30 attempts\n\nAcross those attempts, 116 timed out with no answer; their mean wait was **300.3 ms**, and the longest was **300.9 ms**. The trace does not record the destination address, so it cannot identify which host was contacted.\n\nThe received-packet waits were different: they accounted for only **2.2\u20132.7%** per client and were attributed to a local process on loopback, not another machine.\n\n## Process context\n\nNo `kvstore` thread was identified as a bottleneck for the others; most waiting ended with a timer. The network connection timeouts above are the waits that meet your threshold.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Quantifies client connection timeouts but omits the replica destination and retry cadence."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "All four clients 28.4% on connection attempts to another host timing out at ~300 ms, 30 attempts each."
+  }
+ },
+ {
+  "case": "Q28a__kvstore-5311::A",
+  "question": "Does any thread of kvstore spend a quarter or more of its time blocked on network communication with another machine? If so, which thread, and how long are its waits?",
+  "fault_summary": "once a second each client tries to reach a replica at 10.255.255.1:7070, which never answers, and waits 300 ms for the connection before giving up: the clients are blocked on the network ~30% of the time",
+  "expected": {
+   "where_any": [
+    "client-0",
+    "client-1",
+    "client-2",
+    "client-3"
+   ],
+   "where_all": [],
+   "cause": "once a second each client tries to connect to a replica at 10.255.255.1:7070, which never answers, and gives up after 300 ms",
+   "numbers": [
+    "~300 ms per wait (\u00b120%), ~30% of each client's time"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\nFour `kvstore` client threads each spent about **8.71 seconds**\u2014roughly **29% of their 30-second observed lifetime**\u2014blocked in `poll()`:\n\n| Thread | TID | CPU | Waits |\n|---|---:|---:|---|\n| `client-0` | 665848 | 3 | 29 \u00d7 about 300 ms; max 300.602 ms |\n| `client-1` | 665849 | 4 | 29 \u00d7 about 300 ms; max 300.556 ms |\n| `client-2` | 665850 | 5 | 29 \u00d7 about 300 ms; max 300.931 ms |\n| `client-3` | 665851 | 6 | 29 \u00d7 about 300 ms; max 300.797 ms |\n\nThese TIDs belong to `kvstore`\u2019s thread group (PID 665845). Each thread made a nonblocking IPv4 `connect()` to **10.255.255.1:7070**, which returned `-115` (`EINPROGRESS`), then polled that socket for `POLLOUT`. The polls returned 0 on timeout. The trace shows a non-loopback destination; it does not record a peer hostname.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Identifies the destination and timed-out connection polling but omits the once-per-second retry pattern."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "All four clients ~29% in 300 ms polls after nonblocking connect() to 10.255.255.1:7070, ~once a second."
+  }
+ },
+ {
+  "case": "Q29a__filestore-b20a::B",
+  "question": "Does any thread of filestore spend a quarter or more of its time blocked on storage I/O (writes, syncs or reads)? If so, which thread, and what share of its time?",
+  "fault_summary": "the writer syncs every record: 1000 records per second, each written and then fdatasync()ed (~0.6 ms on the disk each), plus an 8 MB checkpoint synced once a second (several ms); the writer is blocked on the disk 35-50% of the time",
+  "expected": {
+   "where_any": [
+    "writer"
+   ],
+   "where_all": [],
+   "cause": "the writer fdatasync()s every record (1000 per second, ~0.3-0.6 ms each on the disk) plus an 8 MB checkpoint once a second, so it is blocked on the disk much of the time",
+   "numbers": [
+    "35-50% of the writer's time (accept 25-60%)"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\nThe `writer` thread, TID **665264** in filestore PID **665262**, was blocked during `fdatasync` calls for about **10.263 seconds** of its **30.000-second** observed lifetime, or **34.2%**. Those blocked intervals were on **CPU 3**. It made 29,296 `fdatasync` calls, with 10.793 seconds of cumulative syscall time; for example, one call lasted 15.297 ms, including 8.876 ms blocked.\n\nThe `reader` thread (TID 665265) had only 47 \u03bcs of blocked time overlapping `pread64` calls, so it did not meet the threshold.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Identifies writer's sync blocking but omits the per-record policy and periodic checkpoint."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "writer 34.2% blocked across 29,296 fdatasync calls (~1000/s)."
+  }
+ },
+ {
+  "case": "Q29b__filestore-b20a::A",
+  "question": "Is saving slow in filestore, is it waiting on the disk? Which thread, and how much?",
+  "fault_summary": "the writer syncs every record: 1000 records per second, each written and then fdatasync()ed (~0.6 ms on the disk each), plus an 8 MB checkpoint synced once a second (several ms); the writer is blocked on the disk 35-50% of the time",
+  "expected": {
+   "where_any": [
+    "writer"
+   ],
+   "where_all": [],
+   "cause": "the writer fdatasync()s every record (1000 per second, ~0.3-0.6 ms each on the disk) plus an 8 MB checkpoint once a second, so it is blocked on the disk much of the time",
+   "numbers": [
+    "35-50% of the writer's time (accept 25-60%)"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\n## Disk time and saving thread\n\nAcross the whole trace (0\u201330,639 ms), the **writer thread, TID 665264**, performed the file syncs for `records.dat`: **29,296 `fdatasync` calls**, totaling **10,792.6 ms**\u2014**36.3%** of the writer\u2019s 30,009 ms alive. That is a substantial cumulative share spent in storage I/O.\n\nThe individual calls were generally short: median **0.299 ms**, p99 **0.651 ms**. The maximum was **15.297 ms**, but the analysis labels this **no long tail, with only a few isolated slow calls**. So the trace shows substantial total sync time, not consistently slow sync calls.\n\n## What else accounts for the time\n\nThe writer spent **19,017.9 ms (63.4%)** in `clock_nanosleep`, rather than storage calls. The process-level analysis found **no filestore thread was a bottleneck for the others**; most waiting ended with timers. The main `filestore` thread waited about **30,000 ms** for the writer, so that join should not be mistaken for disk-wait time.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Quantifies writer's sync share but omits per-record syncing and the periodic checkpoint."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "writer does 29,296 fdatasyncs of ~0.3 ms, 36.3% of its time."
+  }
+ },
+ {
+  "case": "Q29b__filestore-b20a::B",
+  "question": "Is saving slow in filestore, is it waiting on the disk? Which thread, and how much?",
+  "fault_summary": "the writer syncs every record: 1000 records per second, each written and then fdatasync()ed (~0.6 ms on the disk each), plus an 8 MB checkpoint synced once a second (several ms); the writer is blocked on the disk 35-50% of the time",
+  "expected": {
+   "where_any": [
+    "writer"
+   ],
+   "where_all": [],
+   "cause": "the writer fdatasync()s every record (1000 per second, ~0.3-0.6 ms each on the disk) plus an 8 MB checkpoint once a second, so it is blocked on the disk much of the time",
+   "numbers": [
+    "35-50% of the writer's time (accept 25-60%)"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\nThe save thread is `writer` (TID 665264) in the `filestore` process (TID 665262). On CPU 3, it repeatedly writes to the file opened as `data/records.dat`, then calls `fdatasync(fd=3)`.\n\nAcross the 30.6-second trace, the writer made 29,296 successful `fdatasync` calls. They took 10.79 seconds in total: 0.368 ms on average, 0.295 ms median, and 15.30 ms at the maximum. The writer was in uninterruptible sleep (`sched_switch` state 2) for 10.36 seconds; that sleep overlapped every `fdatasync`, and nearly covered 29,263 calls. This is strong evidence that the writer waits in the file sync path.\n\nThe main `filestore` thread spent 30.00 seconds in a `futex` wait, while the writer also spent 19.02 seconds in `clock_nanosleep` (about 0.655 ms per call). So the save loop\u2019s elapsed time includes substantial pacing sleep as well as sync waits. The trace lacks block request and completion events, so it can\u2019t attribute the sync latency precisely to the physical disk versus filesystem or journal work.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Describes repeated write-and-sync blocking at the required time share but omits the periodic checkpoint."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "writer writes then fdatasyncs ~1000/s, about 10.4-10.8 s of the ~30 s run (~35%) waiting in the sync path."
+  }
+ },
+ {
+  "case": "Q35b__pipeline-f460::B",
+  "question": "Do pipeline's queues keep filling up and then draining? Between which stages?",
+  "fault_summary": "the reader produces in bursts, 500 items as fast as it can, then nothing for 400 ms: the queues fill up during a burst and drain empty between bursts",
+  "expected": {
+   "where_any": [
+    "reader",
+    "parser"
+   ],
+   "where_all": [],
+   "cause": "the reader produces in bursts (500 items as fast as it can, then nothing for 400 ms), so the reader-parser queue (and the parser-sink queues) fill up during a burst and drain empty between bursts",
+   "numbers": [],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\n## Queue behavior\n\nOver the whole trace (offsets 0\u201330,902.4 ms), the parser and all four sinks (`sink-0` through `sink-3`) were **bursty**: each had 62 bursts, with activity in about 20\u201321% and idle time in about 71\u201372% of 50 ms stretches. That pattern indicates queues **between the parser and the sink threads** fill during bursts and drain between them. The trace does not directly measure queue occupancy.\n\n## How the stages relate\n\nThe parser (TID 644355) woke the sinks; each sink spent most of its time blocked until the parser woke it. The parser itself was mostly blocked until woken by the reader (TID 644356). The parser was judged to cause a **negligible hold-up**, passing on a pace set elsewhere\u2014the reader.\n\nFor example, `sink-0`\u2019s longest wait was 387.8 ms, with the reader\u2019s 387.3 ms timer wait on the critical path before the parser woke the sink.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Describes reader-paced bursts and downstream draining but omits the reader-parser fill cycle and production pattern."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "Bursty parser/sink queues paced by the reader, with ~387 ms reader timer gaps between bursts."
+  }
+ },
+ {
+  "case": "Q37a__ticker-8584::A",
+  "question": "Does the wake-up lateness or cycle length of ticker's sampler thread vary by 0.5 ms or more (a quarter of its 2 ms period), throughout the run? If so, by how much?",
+  "fault_summary": "all run long, the maintenance thread (SCHED_FIFO 10, same CPU) spins 0.3-1.8 ms at random every 0.5-2.5 ms; the sampler's wake-up lateness varies from 0 to ~1.8 ms",
+  "expected": {
+   "where_any": [
+    "sampler",
+    "maintenance"
+   ],
+   "where_all": [],
+   "cause": "the maintenance thread (SCHED_FIFO 10, same CPU) spins 0.3-1.8 ms at random every 0.5-2.5 ms all run, so the sampler's wake-up lateness varies",
+   "numbers": [
+    "lateness from 0 to ~1.5-2.6 ms (p99 ~1.6 ms), against a 2 ms period"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\nAcross the whole trace (offsets 0\u201330,733 ms), **cycle length varies throughout**: its median was 2.000 ms, and the 5th\u201395th percentile spread was **2.189 ms** (0.865\u20133.055 ms), with variation in all 10 trace stretches. That exceeds the 0.5 ms threshold.\n\n**Timer wake-up lateness itself did not vary by 0.5 ms:** it was on time relative to the requested timer, with a maximum lateness of 0.057 ms. The longest observed cycle was 5.434 ms\u20143.434 ms longer than the normal 2.000 ms period\u2014and 63 of 14,921 cycles were flagged as abnormally late. The trace does not record the requested sleep length, so the cycle-length variation is not itself a direct measure of lateness against the requested period.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "missing",
+   "cause": "wrong",
+   "numbers": "wrong",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Does not name sampler or maintenance and contradicts the key's wake-up lateness range."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "missing",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Reports cycle-length spread but claims wake-up lateness max 0.057 ms and never names the maintenance thread."
+  }
+ },
+ {
+  "case": "Q37a__ticker-8584::B",
+  "question": "Does the wake-up lateness or cycle length of ticker's sampler thread vary by 0.5 ms or more (a quarter of its 2 ms period), throughout the run? If so, by how much?",
+  "fault_summary": "all run long, the maintenance thread (SCHED_FIFO 10, same CPU) spins 0.3-1.8 ms at random every 0.5-2.5 ms; the sampler's wake-up lateness varies from 0 to ~1.8 ms",
+  "expected": {
+   "where_any": [
+    "sampler",
+    "maintenance"
+   ],
+   "where_all": [],
+   "cause": "the maintenance thread (SCHED_FIFO 10, same CPU) spins 0.3-1.8 ms at random every 0.5-2.5 ms all run, so the sampler's wake-up lateness varies",
+   "numbers": [
+    "lateness from 0 to ~1.5-2.6 ms (p99 ~1.6 ms), against a 2 ms period"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\nTicker\u2019s sampler thread was TID 629969 on CPU 3. Across about 30 seconds, its 14,928 wake-to-wake intervals had a median of 1.999987 ms, but ranged from 1.951 ms to 4.035 ms\u2014a **2.084 ms spread**. There were 71 intervals longer than 2.5 ms. The longest was about 4.035 ms, roughly 2.035 ms over the 2 ms period.\n\nThe delay from `sched_wakeup` until the sampler actually ran also varied substantially: from about 1 \u00b5s to **2.74 ms**. For example, near 01:07:36.786, it was woken on CPU 3 and did not run until about 01:07:36.788; CPU 3 ran maintenance (TID 629971) and git (TID 630337) in between.\n\nThe sampler\u2019s `clock_nanosleep` uses an absolute timer. The timer wake event itself stayed within about \u221250 \u00b5s to +8 \u00b5s of the hrtimer\u2019s hard expiry; the timer\u2019s soft expiry was 50 \u00b5s earlier. So the large variation is in how long the runnable thread waits to run, and in the resulting cycle lengths.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "wrong",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Links sampler scheduling delay to maintenance but omits its spin pattern and reports a maximum above the keyed lateness range."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "Wake-to-run delay 1 us to 2.74 ms with maintenance running on the sampler's CPU."
+  }
+ },
+ {
+  "case": "Q38a__ticker-2ea7::A",
+  "question": "Do the cycles of ticker's sampler thread get steadily slower from the start of the trace to the end, to at least twice their initial length? If so, by how much?",
+  "fault_summary": "the sampler's work per cycle grows steadily from 0.1 ms to 3 ms over the run, so its cycles stretch and, past ~65% of the run, overrun the 2 ms period",
+  "expected": {
+   "where_any": [
+    "sampler"
+   ],
+   "where_all": [],
+   "cause": "the sampler's work per cycle grows steadily from ~0.1 ms to ~3 ms over the run; past ~65% of the run it overruns its 2 ms period",
+   "numbers": [
+    "cycles ~0.8 ms on average in the first half and ~2.2 ms in the second (or ~0.1 ms growing to ~3 ms) (\u00b130%)"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\nOver the whole trace (0\u201330,717.462 ms), sampler\u2019s mean cycle length rose from **2.000 ms in the first tenth** to **4.003 ms in the last tenth**\u2014about **2.00\u00d7**, or **2.003 ms longer**. The increase was not smooth: cycle lengths stepped up at about **18,831 ms**. CPU work per cycle increased gradually from **0.264 ms to 2.807 ms** (10.62\u00d7), eventually outgrowing the period and causing the longer cycles. Confidence: high.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Explains growing CPU work and period overruns, but its starting work value misses the key's tolerance."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "Sampler work per cycle grows 0.26 to 2.8 ms, outgrowing the 2 ms period; cycles double."
+  }
+ },
+ {
+  "case": "Q40b__ticker-8584::B",
+  "question": "Is ticker's sampler ready to run but stuck waiting for the CPU? For how long?",
+  "fault_summary": "all run long, the maintenance thread (SCHED_FIFO 10, same CPU) spins 0.3-1.8 ms at random every 0.5-2.5 ms; the sampler's wake-up lateness varies from 0 to ~1.8 ms",
+  "expected": {
+   "where_any": [
+    "sampler"
+   ],
+   "where_all": [],
+   "cause": "the sampler is runnable but waits behind the maintenance thread (SCHED_FIFO 10) spinning 0.3-1.8 ms at random, all run",
+   "numbers": [
+    "waits of up to ~1.5-2.6 ms, very often (every few ms)"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\n## CPU waiting\n\nOver the whole trace (offsets **0\u201330,733 ms**), sampler (TID 629969) was ready but waiting for CPU for **5,187.620 ms**\u2014**17.3% of its 30,009.230 ms alive time**. It was queued on **CPU 3**.\n\nTID 629971 (`maintenance`) held that CPU for **99.1%** of sampler\u2019s waiting time. Sampler\u2019s longest individual wait to run was **2.742 ms**; it had **1,905** waits of at least 1 ms and none of at least 10 ms. So this was accumulated waiting across many intervals, not one continuous long wait.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "wrong",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Finds repeated maintenance-related CPU waits but omits the spin pattern and exceeds the keyed maximum range."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "17.3% runnable wait, maintenance 99.1% of it, max 2.74 ms, 1,905 waits >= 1 ms."
+  }
+ },
+ {
+  "case": "Q4a__filestore-44a7::A",
+  "question": "Does filestore create, open, close or delete files at a high rate (hundreds per second)? If so, which thread, and which files?",
+  "fault_summary": "the writer writes each 4 KB record to a new file (create, write, close, rename) and deletes the file from 100 records earlier: ~200 files created and deleted per second",
+  "expected": {
+   "where_any": [
+    "writer"
+   ],
+   "where_all": [],
+   "cause": "the writer writes each 4 KB record to a new file (seg-NNNNNN.tmp, renamed to .dat) in the store's data folder, and deletes the file from 100 records earlier",
+   "numbers": [
+    "~200 files created and ~200 deleted per second (\u00b130%)"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\nFilestore process **PID 641768** does this on its **`writer` thread, TID 641770**, running on **CPU 3**. Over about 30 seconds, the thread made 6,000 calls each to `openat`, `close`, `rename`, and `unlink\u2014roughly 200 per second of each**.\n\nThe `openat` calls used `O_WRONLY|O_CREAT|O_TRUNC` and created `data/seg-000000.tmp` through `data/seg-005999.tmp`. The thread renamed those paths to matching `.dat` names and unlinked `.dat` paths in the same numbered range. All 6,000 `close`, `rename`, and `unlink` calls succeeded; all 6,000 `openat` calls returned a file descriptor.\n\nEntry-to-exit mean syscall durations were about **12.8 \u00b5s** for `openat`, **0.9 \u00b5s** for `close`, **15.4 \u00b5s** for `rename`, and **11.7 \u00b5s** for `unlink`.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Identifies writer's segment-file churn at the required rate but omits four-kilobyte records and the deletion lag."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "writer creates seg-NNNNNN.tmp, renames to .dat and unlinks old ones, ~200/s each."
+  }
+ },
+ {
+  "case": "Q6b__jobrunner-72e6::B",
+  "question": "Did jobrunner fail to quit after it was done? What is it still doing?",
+  "fault_summary": "at 40% of the run all jobs are done and the dispatcher shuts the pool down, but job-2 is blocked forever reading a pipe nobody writes to, so the process never exits; it sits idle until the end of the run",
+  "expected": {
+   "where_any": [
+    "job-2"
+   ],
+   "where_all": [],
+   "cause": "at ~12 s all jobs are done and the pool is shut down, but job-2 is blocked forever in read() on a pipe nobody writes to, so the main thread waits forever to join it and the process stays alive",
+   "numbers": [
+    "from ~12 s (\u00b11 s) to the end of the trace"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\n## What the trace shows\n\nPID 662066 (`jobrunner`) was still running when the trace ended, about **30.304 seconds** after it began. It had stopped making meaningful progress around **12.094 seconds** into the trace and remained stalled for the final **18.205 seconds**.\n\nAt the end:\n\n- `job-2` (TID 662079) was still blocked in `read` on file descriptor 3, the pipe\u2019s read end. Its wait had lasted **18.205 seconds**; its previous 300 waits had a median of **37.757 ms** and a longest of **38.329 ms**.\n- The main `jobrunner` thread (TID 662066) was still in a no-timeout futex wait. That had also lasted **18.205 seconds**, compared with a median of **9.962 ms** and a longest of **10.986 ms** across its previous 1,200 waits.\n- The other job threads ran only a few times after the stall began.\n\nSo this looks like the process failed to finish and was left waiting, rather than simply taking a little longer to exit. The trace can show that it remained running and blocked, but it cannot establish whether the program considered its work complete or what it intended to do next.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Dates the unended pipe read correctly but does not establish completed-work shutdown and the main thread's join dependency."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "job-2 blocked in read on the pipe from ~12.1 s to the end; main thread waits without timeout."
+  }
+ },
+ {
+  "case": "Q9b__jobrunner-51ee::A",
+  "question": "Is jobrunner spawning tons of short processes? What are they?",
+  "fault_summary": "every job runs a short-lived process (fork + exec of /usr/bin/true) instead of running in the pool thread: ~100 processes started per second",
+  "expected": {
+   "where_any": [
+    "job-0",
+    "job-1",
+    "job-2",
+    "job-3"
+   ],
+   "where_all": [],
+   "cause": "every job runs a short-lived process: the job threads fork and exec /usr/bin/true for each job",
+   "numbers": [
+    "~100 processes per second, ~2998 in all (\u00b130%)",
+    "they run /usr/bin/true"
+   ],
+   "fix_any": []
+  },
+  "answer": "Verdict: yes\n\nThe trace shows `jobrunner` (PID/TID **654800**) creating four worker threads, which together fork **2,998 short-lived processes**. Their parent TIDs and counts are:\n\n- `job-0` (TID 654809): 750\n- `job-1` (TID 654810): 750\n- `job-2` (TID 654811): 749\n- `job-3` (TID 654812): 749\n\nEvery one of those 2,998 children has a `sched_process_exec` event for **`/usr/bin/true`**, followed by `sched_process_exit`. Their median lifetime from fork to exit is about **0.29 ms**; the longest observed was **2.35 ms**. The four workers ran their children on CPUs **3, 4, 5, and 6**, respectively.\n\nFor example, TID **654813**, forked by `job-0`, ran `/usr/bin/true` and exited on CPU 3 about **0.364 ms** after it was forked. The trace identifies the executable, but does not show enough to establish why `jobrunner` launches it.",
+  "grader_1": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Identifies the worker forks and executable with the total count but omits the process-creation rate."
+  },
+  "grader_2": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "job-0..3 fork 2,998 children that exec /usr/bin/true."
+  }
+ }
+]

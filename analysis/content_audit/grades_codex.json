@@ -1,0 +1,1262 @@
+[
+  {
+    "item": "Q11a__pipeline-5c60",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies the idle sinks but does not explain the parser's routing error."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies sinks waiting for parser work but does not establish routing every item to sink-0."
+    }
+  },
+  {
+    "item": "Q11b__pipeline-5c60",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies the idle sinks and their producer but omits the faulty routing mechanism."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Describes the sink imbalance without explaining the parser's routing error."
+    }
+  },
+  {
+    "item": "Q14a__jobrunner-0dd3",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Gives the six-second shutdown and worker waits but omits serialized flushing under a shared lock."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Gives the six-second tail and sequential worker exits but omits shared-lock flushing."
+    }
+  },
+  {
+    "item": "Q15a__batch_server-940f",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies the sleep-under-lock dependency and gives both round-time estimates."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds the flusher dependency but omits holding the lock during sleep and the round-time comparison."
+    }
+  },
+  {
+    "item": "Q16a__crunch-4b6e",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies monitor-induced CPU starvation and quantifies the delayed round and useful work."
+    },
+    "B": {
+      "verdict": "no",
+      "location": "missing",
+      "cause": "wrong",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Denies the straggler mechanism and does not identify monitor interference as responsible."
+    }
+  },
+  {
+    "item": "Q16a__crunch-a270",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "wrong",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds monitor interference but incorrectly calls it every-round delay and omits the five one-second episodes."
+    },
+    "B": {
+      "verdict": "no",
+      "location": "wrong",
+      "cause": "wrong",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Focuses on the watchdog and misses calc-3's periodic starvation by monitor."
+    }
+  },
+  {
+    "item": "Q16a__crunch-a6c0",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies calc-0's excess CPU work and gives the delayed and peer round times."
+    },
+    "B": {
+      "verdict": "no",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Recognizes calc-0's excess work but denies its round-level bottleneck and omits the round-time comparison."
+    }
+  },
+  {
+    "item": "Q16b__crunch-4b6e",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds monitor interference on calc-5 but omits the round-wide dependency and round-time comparison."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Explains the monitor's recurring CPU interference and quantifies delayed rounds and useful work."
+    }
+  },
+  {
+    "item": "Q17a__pipeline-6056",
+    "A": {
+      "verdict": "no",
+      "location": "missing",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Notes parser CPU saturation but does not identify it as responsible or explain queue backpressure."
+    },
+    "B": {
+      "verdict": "cannot tell",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds the busy parser and dependent stages but omits input-queue saturation and the required per-item and throughput figures."
+    }
+  },
+  {
+    "item": "Q17b__pipeline-6056",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds parser saturation and waiting stages but omits queue saturation and the key numerical comparison."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Gives parser cycle time and waiting stages but omits the full-queue mechanism and item-count comparison."
+    }
+  },
+  {
+    "item": "Q18b__kvstore-4bd0",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies the saturated single-CPU server and twelve-millisecond requests but omits per-request work and healthy latency."
+    },
+    "B": {
+      "verdict": "no",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Attributes client waits to kvd but omits server CPU saturation, per-request work, and healthy latency."
+    }
+  },
+  {
+    "item": "Q19b__batch_server-41b3",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies the two deadlocking workers and the twelve-second onset."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "partly",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Dates the stall correctly but groups all waiting threads together and does not identify the worker-1/worker-3 deadlock."
+    }
+  },
+  {
+    "item": "Q22a__crunch-4b6e",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies calc-5's recurring completion delay from monitor's twenty-millisecond CPU occupation."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies calc-5 as the recurring straggler and explains monitor-induced CPU starvation."
+    }
+  },
+  {
+    "item": "Q22b__crunch-4b6e",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Explains the recurring calc-5 dependency and monitor's CPU interference."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "wrong",
+      "cause": "wrong",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Blames coordinator pacing instead of calc-5's monitor-induced delay."
+    }
+  },
+  {
+    "item": "Q22b__crunch-a270",
+    "A": {
+      "verdict": "yes",
+      "location": "wrong",
+      "cause": "wrong",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Blames the leader's sleep instead of calc-3's starvation by monitor."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds monitor-induced starvation but omits the two-second bursts every five seconds and mischaracterizes their consistency."
+    }
+  },
+  {
+    "item": "Q23a__reporter-285d",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Gives the IRQ, CPU share, and interval but omits archive's direct reads and interrupt count."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Gives the IRQ, CPU share, and interval but omits archive's direct reads and interrupt count."
+    }
+  },
+  {
+    "item": "Q23b__reporter-285d",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies the interrupt load but omits its direct-read source and interrupt count."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Connects NVMe interrupts with archive activity but omits direct reads and the nine-to-twenty-one-second interval."
+    }
+  },
+  {
+    "item": "Q26b__batch_server-41b3",
+    "A": {
+      "verdict": "yes",
+      "location": "wrong",
+      "cause": "wrong",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Selects watchdog's timer sleep instead of the two deadlocked workers."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies worker-1 and worker-3 as possible deadlock participants but omits reciprocal lock ownership."
+    }
+  },
+  {
+    "item": "Q26b__batch_server-940f",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies worker-2's futex dependencies with totals consistent with the per-round wait but omits flusher sleeping under the lock."
+    },
+    "B": {
+      "verdict": "no",
+      "location": "wrong",
+      "cause": "wrong",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Discusses watchdog and idle waits instead of worker-2's recurring lock blockage."
+    }
+  },
+  {
+    "item": "Q27a__kvstore-226c",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies timed-out client connections and their duration but omits the replica destination and explicit once-per-second cadence."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "missing",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Describes timed-out polling but does not name the clients or identify the replica connection and cadence."
+    }
+  },
+  {
+    "item": "Q27b__kvstore-226c",
+    "A": {
+      "verdict": "yes",
+      "location": "wrong",
+      "cause": "wrong",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Selects coordinator, watchdog, and server waits instead of client connection timeouts."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Names client-0 in the wait chain and gives a three-hundred-millisecond wait but omits the unanswered replica connections and cadence."
+    }
+  },
+  {
+    "item": "Q28a__kvstore-5311",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies the destination and timed-out connection polling but omits the once-per-second retry pattern."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Quantifies client connection timeouts but omits the replica destination and retry cadence."
+    }
+  },
+  {
+    "item": "Q29a__filestore-a94e",
+    "A": {
+      "verdict": "yes",
+      "location": "missing",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Quantifies fdatasync blocking but does not name writer or describe per-record syncing and checkpoints."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies writer's sync cost but omits per-record syncing and the periodic checkpoint."
+    }
+  },
+  {
+    "item": "Q29a__filestore-b20a",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies writer's sync cost but omits per-record syncing and the periodic checkpoint."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies writer's sync blocking but omits the per-record policy and periodic checkpoint."
+    }
+  },
+  {
+    "item": "Q29b__filestore-b20a",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Quantifies writer's sync share but omits per-record syncing and the periodic checkpoint."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Describes repeated write-and-sync blocking at the required time share but omits the periodic checkpoint."
+    }
+  },
+  {
+    "item": "Q30b__batch_server-41b3",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies both workers and the reciprocal-lock deadlock consistent with their unended waits."
+    },
+    "B": {
+      "verdict": "cannot tell",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Despite its verdict, identifies both workers and the reciprocal-mutex deadlock mechanism."
+    }
+  },
+  {
+    "item": "Q31a__batch_server-9026",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds the shared lock but omits full-work lock holding and reports mixed wait durations without round time."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Explains serialized five-millisecond worker work and round duration but omits the required per-wait duration."
+    }
+  },
+  {
+    "item": "Q31a__batch_server-9613",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds frequent shared-lock waits but omits the forty critical sections and required round-time comparison."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds shared-lock contention and affected round time but omits forty critical sections and the healthy comparison."
+    }
+  },
+  {
+    "item": "Q31b__batch_server-9026",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies the workers and shared lock but omits full-work lock holding and round duration."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Explains serialized worker work and round duration but does not give the required five-millisecond lock wait."
+    }
+  },
+  {
+    "item": "Q33a__batch_server-1f3b",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies all three threads and the medium-priority preemption prolonging the high-priority lock wait."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies all three priorities and the lock-holder preemption forming priority inversion."
+    }
+  },
+  {
+    "item": "Q35b__pipeline-f460",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds reader-parser backpressure but omits burst production and denies downstream queue filling."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Describes reader-paced bursts and downstream draining but omits the reader-parser fill cycle and production pattern."
+    }
+  },
+  {
+    "item": "Q37a__ticker-8584",
+    "A": {
+      "verdict": "yes",
+      "location": "missing",
+      "cause": "wrong",
+      "numbers": "wrong",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Does not name sampler or maintenance and contradicts the key's wake-up lateness range."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "wrong",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Links sampler scheduling delay to maintenance but omits its spin pattern and reports a maximum above the keyed lateness range."
+    }
+  },
+  {
+    "item": "Q38a__ticker-2ea7",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Explains growing CPU work and period overruns, but its starting work value misses the key's tolerance."
+    },
+    "B": {
+      "verdict": "no",
+      "location": "correct",
+      "cause": "wrong",
+      "numbers": "wrong",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Reports a two-to-four-millisecond step instead of the key's growing per-cycle work."
+    }
+  },
+  {
+    "item": "Q3a__filestore-4ca4",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies stats repeatedly opening the missing file with ENOENT at approximately the required rate."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies stats, the missing-file opens, and a count and duration consistent with the required rate."
+    }
+  },
+  {
+    "item": "Q40b__ticker-1759",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds higher-priority maintenance interference and the wait size but omits the three-hundred-millisecond recurrence."
+    },
+    "B": {
+      "verdict": "no",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Despite its verdict, identifies sampler's maintenance-related CPU wait but omits the priority and recurrence."
+    }
+  },
+  {
+    "item": "Q40b__ticker-8584",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "wrong",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds maintenance interference but omits its random spin pattern and reports a maximum above the keyed range."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "wrong",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds repeated maintenance-related CPU waits but omits the spin pattern and exceeds the keyed maximum range."
+    }
+  },
+  {
+    "item": "Q41a__crunch-a270",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies calc-3's long runnable wait but omits monitor interference and five-second recurrence."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Shows calc-3's near-one-second waits repeating every five seconds but omits monitor interference."
+    }
+  },
+  {
+    "item": "Q41b__crunch-a270",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Explains monitor-induced starvation but omits the maximum CPU-wait duration and five-second recurrence."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies monitor occupying calc-3's CPU and the near-one-second maximum but omits five-second recurrence."
+    }
+  },
+  {
+    "item": "Q44a__kvstore-768d",
+    "A": {
+      "verdict": "yes",
+      "location": "missing",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Quantifies the slow-request fraction and latency but does not identify kvd or its random server slow path."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "missing",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Quantifies the latency tail but omits kvd and the server slow-path mechanism."
+    }
+  },
+  {
+    "item": "Q45b__crunch-3329",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies collector's continuous CPU use but omits spinning on a flag."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies collector's CPU saturation but does not establish the flag-spinning mechanism."
+    }
+  },
+  {
+    "item": "Q45b__crunch-a068",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies indexer running continuously on its own CPU at essentially full utilization."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies indexer's continuous user-mode work at essentially full CPU utilization."
+    }
+  },
+  {
+    "item": "Q46a__crunch-a6c0",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Quantifies calc-0's fourfold CPU imbalance but omits per-round work and peers waiting for it."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Explains calc-0's forty-versus-ten-millisecond work and its peers' resulting delay."
+    }
+  },
+  {
+    "item": "Q46b__crunch-a6c0",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Quantifies the fourfold imbalance but omits per-round work and the peers' early completion and waiting."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Quantifies the fourfold work imbalance and calc-0's late completion holding up rounds."
+    }
+  },
+  {
+    "item": "Q48a__batch_server-1f3b",
+    "A": {
+      "verdict": "yes",
+      "location": "partly",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Emphasizes compactor and syscall counts instead of worker-2's priority-inversion lock wait."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Quantifies worker-2's flusher wait but omits compactor's priority-inversion role and rejects the lock interpretation."
+    }
+  },
+  {
+    "item": "Q48a__batch_server-940f",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies worker-2's extra futex calls but omits its sleep-under-lock dependency and specific per-round blockage."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds the flusher sleep dependency but omits lock holding and reports finish-time lag rather than the required lock-blocking time."
+    }
+  },
+  {
+    "item": "Q48b__batch_server-940f",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies worker-2's extra roughly twenty-two-millisecond waits but omits flusher sleeping under the lock."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Explains worker-2's distinct lock wait on the sleeping flusher and quantifies its recurring blockage."
+    }
+  },
+  {
+    "item": "Q49a__crunch-d97e",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies calc-6's exclusive small writes but omits logging after work and the two-hundred-writes-per-round count."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies calc-6's exclusive writes but omits their logging purpose, size, and per-round count."
+    }
+  },
+  {
+    "item": "Q49b__crunch-a6c0",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies calc-0's forty-versus-ten-millisecond execution and the peers' additional waiting."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Explains calc-0's fourfold work and the resulting late round completion."
+    }
+  },
+  {
+    "item": "Q49b__crunch-d97e",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies calc-6's small log writes but omits two hundred writes after CPU work each round."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies calc-6's exclusive writes but omits logging details and the per-round count."
+    }
+  },
+  {
+    "item": "Q4a__filestore-44a7",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies writer's segment-file churn at the required rate but omits four-kilobyte records and the deletion lag."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Quantifies writer's file churn but omits the temporary-to-data rename mechanism and deletion lag."
+    }
+  },
+  {
+    "item": "Q51b__filestore-2188",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "partial",
+      "note": "Identifies one-byte reads and appropriate buffering but omits five-thousand-byte passes every hundred milliseconds."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "full",
+      "note": "Describes five thousand one-byte reads per paced pass and recommends buffered chunk reads."
+    }
+  },
+  {
+    "item": "Q52a__filestore-2d10",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "partial",
+      "note": "Identifies empty polling and a suitable fix but omits the pipe, zero timeout, and short sleeps."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "missing",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "wrong",
+      "note": "Describes the empty pipe polling loop and correct fix but does not name stats."
+    }
+  },
+  {
+    "item": "Q54a__batch_server-940f",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "full",
+      "note": "Identifies the forty-millisecond sleep under the lock and correctly moves the sleep outside it."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "full",
+      "note": "Explains flusher holding the mutex across its forty-millisecond sleep and gives the correct fix."
+    }
+  },
+  {
+    "item": "Q54b__batch_server-940f",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "full",
+      "note": "Explains the forty-millisecond lock hold and correctly moves sleeping outside the critical section."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "missing",
+      "fix": "correct",
+      "overall": "partial",
+      "note": "Finds flusher's long lock hold and gives a valid fix but does not identify the actual sleep or forty-millisecond hold."
+    }
+  },
+  {
+    "item": "Q55a__crunch-626c",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "full",
+      "note": "Identifies thirty-two runnable workers sharing four CPUs and recommends matching the pool to CPU capacity."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "full",
+      "note": "Explains thirty-two workers queueing on four CPUs and gives acceptable pool or affinity fixes."
+    }
+  },
+  {
+    "item": "Q56b__pipeline-394e",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "full",
+      "note": "Identifies the sixteen-sink broadcast herd and recommends waking one worker per item."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "correct",
+      "overall": "full",
+      "note": "Identifies parser's wake-all behavior across sixteen sinks and gives the one-waiter-per-job fix."
+    }
+  },
+  {
+    "item": "Q5a__jobrunner-7489",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies the helper's SIGSEGV death and the main process's normal exit."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "full",
+      "note": "Identifies job-helper and its fatal SIGSEGV signal."
+    }
+  },
+  {
+    "item": "Q6b__jobrunner-72e6",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Finds job-2's unended read and the main-thread wait but omits the unwritten pipe and twelve-second onset."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "partly",
+      "numbers": "correct",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Dates the unended pipe read correctly but does not establish completed-work shutdown and the main thread's join dependency."
+    }
+  },
+  {
+    "item": "Q7b__filestore-5943",
+    "A": {
+      "verdict": "yes",
+      "location": "missing",
+      "cause": "partly",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Identifies unrelated documentation reads but omits stats and the repeated three-hundred-file scan pattern."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "missing",
+      "cause": "correct",
+      "numbers": "n/a",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Describes the periodic documentation scan accurately but does not name stats."
+    }
+  },
+  {
+    "item": "Q9b__jobrunner-51ee",
+    "A": {
+      "verdict": "yes",
+      "location": "correct",
+      "cause": "correct",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "partial",
+      "note": "Identifies the worker forks and executable with the total count but omits the process-creation rate."
+    },
+    "B": {
+      "verdict": "yes",
+      "location": "missing",
+      "cause": "partly",
+      "numbers": "partly",
+      "fix": "n/a",
+      "overall": "wrong",
+      "note": "Gives the process count and rate but omits the responsible job threads and executable path."
+    }
+  }
+]

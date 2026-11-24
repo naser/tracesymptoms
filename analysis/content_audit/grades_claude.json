@@ -1,0 +1,1262 @@
+[
+ {
+  "item": "Q11a__pipeline-5c60",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Names sink-1..3 idle and sink-0 doing the work, but not that the parser routes every item to sink-0."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Names sink-1..3 idle waiting on parser, but does not say the parser sends all items to sink-0 instead of round-robin."
+  }
+ },
+ {
+  "item": "Q11b__pipeline-5c60",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Names idle sink-1..3 waiting for parser work, but not that the parser hands every item to sink-0."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Names idle sink-1..3 and active sink-0, but gives no routing mechanism."
+  }
+ },
+ {
+  "item": "Q14a__jobrunner-0dd3",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "6 s and joins on job threads are right, but the serialized shared-lock hold is not identified (calls it timer/inter-thread waits)."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "6 s and sequential 1.5 s job exits after futex waits are right, but the shared lock held while flushing is not named."
+  }
+ },
+ {
+  "item": "Q15a__batch_server-940f",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "worker-2 <- flusher holding the lock across its 40 ms sleep; rounds 41.8 ms vs ~20.4 ms."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Blames flusher's 40 ms sleep and worker-2's futex wait but not the lock held across the sleep; no round durations."
+  }
+ },
+ {
+  "item": "Q16a__crunch-4b6e",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-5 preempted by RT monitor ~20 ms per round; rounds ~30.2 ms and ~65% shorter."
+  },
+  "B": {
+   "verdict": "no",
+   "location": "wrong",
+   "cause": "wrong",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Says no single thread; points at watchdog and dismisses monitor."
+  }
+ },
+ {
+  "item": "Q16a__crunch-a270",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "wrong",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-3 and RT monitor are right, but claims the delay hits every round (~427 ms avg) rather than ~1 s rounds 5 times every 5 s."
+  },
+  "B": {
+   "verdict": "no",
+   "location": "wrong",
+   "cause": "wrong",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Says no; discusses the watchdog sleep and never identifies calc-3/monitor."
+  }
+ },
+ {
+  "item": "Q16a__crunch-a6c0",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-0 runs ~40 ms per round vs ~10.6 ms for peers and every round waits for it."
+  },
+  "B": {
+   "verdict": "no",
+   "location": "wrong",
+   "cause": "wrong",
+   "numbers": "wrong",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Notes calc-0's 4x CPU but denies it holds up the run; gives ~100 ms cycles."
+  }
+ },
+ {
+  "item": "Q16b__crunch-4b6e",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-5 preempted by monitor ~20 ms per cycle is right, but round durations (~30 vs ~10.5 ms) are not given."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-5 delayed by RT priority-10 monitor; rounds median 30.2 ms, ~65% shorter if it kept pace."
+  }
+ },
+ {
+  "item": "Q17a__pipeline-6056",
+  "A": {
+   "verdict": "no",
+   "location": "wrong",
+   "cause": "missing",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Says no single thread holds up the run and does not blame the parser."
+  },
+  "B": {
+   "verdict": "cannot tell",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Identifies the busy parser that reader and sinks wait on, but no per-item cost or item count (only a 1.6 ms example)."
+  }
+ },
+ {
+  "item": "Q17b__pipeline-6056",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Parser busy the whole run with reader and sinks waiting, but no per-item time or item counts."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Parser busy and unable to keep up, median cycle 1.457 ms, but no item count vs 60,000."
+  }
+ },
+ {
+  "item": "Q18b__kvstore-4bd0",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "kvd handlers saturating one CPU with clients waiting ~12 ms per reply, but no per-request server cost (~3 ms) or healthy baseline."
+  },
+  "B": {
+   "verdict": "no",
+   "location": "partly",
+   "cause": "wrong",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Says no bottleneck; attributes client waits to network exchanges with kvd without saying kvd is saturated."
+  }
+ },
+ {
+  "item": "Q19b__batch_server-41b3",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "Stops at ~12.1 s; worker-1 and worker-3 blocked on different lock futexes, consistent with deadlock."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Correct ~12.1 s stop, but lists all threads in futex waits as equals and gives only a generic synchronization stall, no deadlock."
+  }
+ },
+ {
+  "item": "Q22a__crunch-4b6e",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-5 late every round because SCHED_FIFO monitor preempts it ~20 ms on CPU 9."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-5 late in all 299 rounds due to RT priority-10 monitor holding its CPU."
+  }
+ },
+ {
+  "item": "Q22b__crunch-4b6e",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-5 kept off CPU by RT priority-10 monitor ~20 ms per round."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "wrong",
+   "cause": "wrong",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Blames the main crunch thread's pacing and denies a slow calc worker."
+  }
+ },
+ {
+  "item": "Q22b__crunch-a270",
+  "A": {
+   "verdict": "yes",
+   "location": "wrong",
+   "cause": "wrong",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Blames the leader's sleep and says no calc thread is slow."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-3 kept off CPU by RT monitor is right, but misses the 2 s every 5 s pattern and presents it as consistent every round."
+  }
+ },
+ {
+  "item": "Q23a__reporter-285d",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "nvme0q3 ~21.5% of CPU 3 from 9-21 s is right, but no interrupt count and no link to the archive thread's direct reads."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "nvme0q3 peak 21.9% during 9.2-21.5 s is right, but no interrupt count and no link to the archive thread's reads."
+  }
+ },
+ {
+  "item": "Q23b__reporter-285d",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "nvme0q3 peak 21.9% during 9.2-21.5 s, but no interrupt count and no archive-read origin."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "nvme0q3 ~2.04M interrupts, ~23% of CPU 3 while archive runs, but no 9-21 s window and only co-occurrence with archive, not its reads as source."
+  }
+ },
+ {
+  "item": "Q26b__batch_server-41b3",
+  "A": {
+   "verdict": "yes",
+   "location": "wrong",
+   "cause": "wrong",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Names the watchdog's timer sleep, not the deadlocked workers."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Leads with the flusher; mentions worker-1/worker-3 possible deadlock only as secondary."
+  }
+ },
+ {
+  "item": "Q26b__batch_server-940f",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "worker-2 futex waits woken by flusher, but framed as waiting for work/signals, not cache_lock held across the flusher's sleep; per-round wait only derivable from totals."
+  },
+  "B": {
+   "verdict": "no",
+   "location": "wrong",
+   "cause": "wrong",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Names the watchdog's timer sleep and says no problematic blockage."
+  }
+ },
+ {
+  "item": "Q27a__kvstore-226c",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "All four clients ~28% blocked on connection attempts timing out at ~300 ms, 30 attempts (once a second)."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Identifies the four tasks only by TID, never as clients, and describes poll POLLOUT timeouts without saying connect to an unresponsive replica."
+  }
+ },
+ {
+  "item": "Q27b__kvstore-226c",
+  "A": {
+   "verdict": "yes",
+   "location": "wrong",
+   "cause": "wrong",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Names the main thread's futex, watchdog and kvd pause, not the clients' connect waits."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Leads with the main thread's 30 s futex; clients' ~300 ms poll waits only mentioned in passing, no unreachable replica."
+  }
+ },
+ {
+  "item": "Q28a__kvstore-5311",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "All four clients ~29% in 300 ms polls after nonblocking connect() to 10.255.255.1:7070, ~once a second."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "All four clients 28.4% on connection attempts to another host timing out at ~300 ms, 30 attempts each."
+  }
+ },
+ {
+  "item": "Q29a__filestore-a94e",
+  "A": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Gives only TID 639366, never names the writer thread; 33.6% in ~30k fdatasync calls is right."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "writer 35.6% mostly in fdatasync, but no per-record sync frequency or checkpoint."
+  }
+ },
+ {
+  "item": "Q29a__filestore-b20a",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "writer 36.3% mostly fdatasync, but does not say it syncs every record."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "writer 34.2% blocked across 29,296 fdatasync calls (~1000/s)."
+  }
+ },
+ {
+  "item": "Q29b__filestore-b20a",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "writer does 29,296 fdatasyncs of ~0.3 ms, 36.3% of its time."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "writer writes then fdatasyncs ~1000/s, about 10.4-10.8 s of the ~30 s run (~35%) waiting in the sync path."
+  }
+ },
+ {
+  "item": "Q30b__batch_server-41b3",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "worker-1 and worker-3 in lock futex waits on different addresses from ~12.1 s, consistent with mutual deadlock."
+  },
+  "B": {
+   "verdict": "cannot tell",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "Hedged verdict, but names worker-1 and worker-3 as likely deadlocked on each other's mutexes."
+  }
+ },
+ {
+  "item": "Q31a__batch_server-9026",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Four workers contend on one futex, but no lock held over whole 5 ms work/serialization; average waits 6-16 ms, no round time."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Workers take turns on one lock and work in sequence; rounds 21.5 ms, but per-wait ~5 ms not stated."
+  }
+ },
+ {
+  "item": "Q31a__batch_server-9613",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Workers block ~1000 times/s in ~0.3 ms waits on one contended futex, but no round times or per-round loss."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Frequent short waits on one shared lock, rounds 17.6 ms, but no comparison to healthy/per-round loss."
+  }
+ },
+ {
+  "item": "Q31b__batch_server-9026",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Four workers contend on one futex with ~5-16 ms median waits, but no lock-held-over-work serialization and no round time."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Workers take turns instead of running in parallel, rounds 21.5 ms, but per-wait ~5 ms not stated."
+  }
+ },
+ {
+  "item": "Q33a__batch_server-1f3b",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "worker-2 waits on lock released by flusher, which compactor (middle priority) keeps off CPU 3."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "worker-2 (prio 10) waits on flusher (prio 1) preempted by compactor (prio 5)."
+  }
+ },
+ {
+  "item": "Q35b__pipeline-f460",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Points at the reader-parser queue but explains it as backpressure, not the reader's bursty production with 400 ms gaps."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "Bursty parser/sink queues paced by the reader, with ~387 ms reader timer gaps between bursts."
+  }
+ },
+ {
+  "item": "Q37a__ticker-8584",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "missing",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Reports cycle-length spread but claims wake-up lateness max 0.057 ms and never names the maintenance thread."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "Wake-to-run delay 1 us to 2.74 ms with maintenance running on the sampler's CPU."
+  }
+ },
+ {
+  "item": "Q38a__ticker-2ea7",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "Sampler work per cycle grows 0.26 to 2.8 ms, outgrowing the 2 ms period; cycles double."
+  },
+  "B": {
+   "verdict": "no",
+   "location": "correct",
+   "cause": "wrong",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Sees cycles doubling but calls it a step change and never mentions growing work per cycle."
+  }
+ },
+ {
+  "item": "Q3a__filestore-4ca4",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "stats openat of batch.ready fails with ENOENT 28,391 times in ~30 s."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "stats openat of data/incoming/batch.ready, 28,391 ENOENT failures over the trace."
+  }
+ },
+ {
+  "item": "Q40b__ticker-1759",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Waits of 3.3-4.6 ms behind higher-priority maintenance, but the ~300 ms period is not stated."
+  },
+  "B": {
+   "verdict": "no",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Longest wait 5.0 ms with maintenance holding the CPU, but says not materially stuck and gives no 300 ms period."
+  }
+ },
+ {
+  "item": "Q40b__ticker-8584",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Longest wait 2.74 ms behind maintenance, but frequency only as a 5.17 s total."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "17.3% runnable wait, maintenance 99.1% of it, max 2.74 ms, 1,905 waits >= 1 ms."
+  }
+ },
+ {
+  "item": "Q41a__crunch-a270",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "missing",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-3 950 ms wait is right, but no monitor thread as cause and no ~5 s recurrence."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "missing",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-3 waits of 550/950 ms every ~5 s listed, but the monitor thread is never named as the cause."
+  }
+ },
+ {
+  "item": "Q41b__crunch-a270",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-3 kept off CPU by RT monitor, 550 ms example, but no ~5 s recurrence (claims every round)."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-3 waits up to 950 ms while monitor runs on CPU 7, but recurrence every ~5 s not stated."
+  }
+ },
+ {
+  "item": "Q44a__kvstore-768d",
+  "A": {
+   "verdict": "yes",
+   "location": "missing",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "2.04% of requests at ~25 ms vs 159 us median is right, but never attributes the slow path to the kvd server."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "missing",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "2.1% of recvfrom calls ~166x median, but no server (kvd) attribution or slow-path cause."
+  }
+ },
+ {
+  "item": "Q45b__crunch-3329",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "collector uses ~100% of one CPU, but no spin-wait on a flag."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "collector 99.8% of a CPU in user mode, but cannot say it is spinning on a flag."
+  }
+ },
+ {
+  "item": "Q45b__crunch-a068",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "indexer runs ~100% of CPU 12 for its whole life."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "indexer uses 99.8% of one CPU, mostly user mode."
+  }
+ },
+ {
+  "item": "Q46a__crunch-a6c0",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-0 ~3.9x the CPU time, but no per-round 40 vs 10 ms split or peers waiting."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-0 ~40 ms per round vs ~10 ms for peers (3.9x), finishing ~30 ms later."
+  }
+ },
+ {
+  "item": "Q46b__crunch-a6c0",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-0 ~3.9x CPU time, but only totals, no per-round work or peers waiting."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-0 3.9x CPU, finishes 29.9 ms after peers in 40.5 ms rounds."
+  }
+ },
+ {
+  "item": "Q48a__batch_server-1f3b",
+  "A": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "wrong",
+   "numbers": "missing",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Leads with the compactor's CPU time; worker-2 only noted for more futex calls and said not to block longer."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "worker-2 blocks ~18 ms per wait until flusher wakes it, but calls it a signal-like wait, not a lock, and does not tie flusher's preemption to the compactor."
+  }
+ },
+ {
+  "item": "Q48a__batch_server-940f",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "wrong",
+   "numbers": "wrong",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "Picks worker-2 but for more and shorter futex calls; no lock blocking on the flusher, no ~22 ms per round."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "worker-2 waits on the sleeping flusher and finishes 22.3 ms late, but no lock held across the sleep and says blocking is not distinctive."
+  }
+ },
+ {
+  "item": "Q48b__batch_server-940f",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "worker-2's extra 484 lock-type waits of ~22.7 ms are found, but not tied to the flusher holding cache_lock."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "worker-2 blocks ~23 ms per round on a futex the sleeping flusher likely holds."
+  }
+ },
+ {
+  "item": "Q49a__crunch-d97e",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-6 alone makes 64-byte write() calls, but only a 59,800 total, no per-round count."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-6 alone makes 59,800 writes, but no write size/log nature and no per-round count."
+  }
+ },
+ {
+  "item": "Q49b__crunch-a6c0",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-0 runs ~40 ms per 100 ms vs ~10 ms for others, ~4x CPU time."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "calc-0 ~4x CPU time, 40.5 ms vs 10.6 ms per round."
+  }
+ },
+ {
+  "item": "Q49b__crunch-d97e",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-6 writes 64-byte lines to calc.log, others none, but no per-round count."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "calc-6 alone makes 59,800 writes, but no size/log detail and no per-round count."
+  }
+ },
+ {
+  "item": "Q4a__filestore-44a7",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "writer creates seg-NNNNNN.tmp, renames to .dat and unlinks old ones, ~200/s each."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "writer makes 6,000 each of open/close/rename/unlink, but does not describe the per-record new-file/rename/delete-older cycle."
+  }
+ },
+ {
+  "item": "Q51b__filestore-2188",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "partial",
+   "note": "reader's 1-byte reads at ~48k/s and buffered-read fix are right, but the 5000 bytes every 100 ms pattern is not given."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "full",
+   "note": "reader does 5,000 one-byte reads per pass, 1.435M in ~30 s; read a multi-KB buffer instead."
+  }
+ },
+ {
+  "item": "Q52a__filestore-2d10",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "partial",
+   "note": "stats polls ~3,982/s with nothing ready and blocking-wait fix, but no zero-timeout poll on a pipe plus sleep."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "wrong",
+   "note": "Correct zero-timeout poll on an empty pipe plus sleep and blocking-poll fix, but the thread is only given as TID 640575, never named stats."
+  }
+ },
+ {
+  "item": "Q54a__batch_server-940f",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "full",
+   "note": "flusher holds the lock across ~40 ms sleep; move the sleep outside the lock."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "full",
+   "note": "flusher holds the mutex across its 40 ms sleep; move sleep outside the locked section."
+  }
+ },
+ {
+  "item": "Q54b__batch_server-940f",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "full",
+   "note": "flusher likely holds the lock across a 40.1 ms sleep; move the sleep outside the critical section."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "partly",
+   "numbers": "missing",
+   "fix": "correct",
+   "overall": "partial",
+   "note": "flusher holds a contended mutex, but the sleep under the lock and the ~40 ms hold are not identified."
+  }
+ },
+ {
+  "item": "Q55a__crunch-626c",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "full",
+   "note": "32 calc workers on 4 CPUs, ~29 runnable; shrink pool to ~4."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "full",
+   "note": "32 workers pinned to CPUs 4-7; cap pool at four or widen affinity."
+  }
+ },
+ {
+  "item": "Q56b__pipeline-394e",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "full",
+   "note": "Parser wake-ups release ~15.9 of 16 sinks, most find no work; switch to wake-one or per-worker queues."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "correct",
+   "overall": "full",
+   "note": "Parser futex-wakes all 16 sinks (~15.2 per call); replace broadcast with one-waiter notification."
+  }
+ },
+ {
+  "item": "Q5a__jobrunner-7489",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "job-helper PID 654421 killed by SIGSEGV at ~15.2 s; main exits normally."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "job-helper 654421 dies from SIGSEGV (signal 11)."
+  }
+ },
+ {
+  "item": "Q6b__jobrunner-72e6",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "partial",
+   "note": "job-2 stuck in read(fd 3) with the main thread waiting, but the ~12 s start is given only as wall-clock time and 18.2 s to the end."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "job-2 blocked in read on the pipe from ~12.1 s to the end; main thread waits without timeout."
+  }
+ },
+ {
+  "item": "Q7b__filestore-5943",
+  "A": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "partly",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Finds 4,500 reads of /usr/share/doc files but only at process level, never the stats thread or the 2 s walk."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "correct",
+   "numbers": "n/a",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "Correct 2 s walks of /usr/share/doc reading 300 files, but the thread is only TID 642363, never named stats."
+  }
+ },
+ {
+  "item": "Q9b__jobrunner-51ee",
+  "A": {
+   "verdict": "yes",
+   "location": "correct",
+   "cause": "correct",
+   "numbers": "correct",
+   "fix": "n/a",
+   "overall": "full",
+   "note": "job-0..3 fork 2,998 children that exec /usr/bin/true."
+  },
+  "B": {
+   "verdict": "yes",
+   "location": "partly",
+   "cause": "partly",
+   "numbers": "partly",
+   "fix": "n/a",
+   "overall": "wrong",
+   "note": "2,998 children named true at ~98/s, but attributed only to the jobrunner process, not the job threads, and no /usr/bin/true path."
+  }
+ }
+]

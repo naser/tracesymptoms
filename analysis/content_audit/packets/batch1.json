@@ -1,0 +1,436 @@
+[
+ {
+  "item": "Q11a__pipeline-5c60",
+  "category": "comprehension",
+  "question": "Do most of pipeline's sink threads stay idle while one or a few do all the work? If so, which sinks are idle?",
+  "fault_summary": "the parser hands every item to sink-0 instead of round-robin: sink-0 is busy ~80% of the time and sink-1..3 never get any work",
+  "expected": {
+   "where_any": [
+    "sink-1",
+    "sink-2",
+    "sink-3"
+   ],
+   "where_all": [],
+   "cause": "the parser hands every item to sink-0 instead of round-robin: sink-1, sink-2 and sink-3 never get any work",
+   "numbers": [],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: yes\n\n## Sink activity\n\nAcross the whole trace (0\u201330,614 ms), **three of the four sink threads were idle**: `sink-1` (TID 645802), `sink-2` (645803), and `sink-3` (645804). Each ran for less than 0.1 ms and was blocked for about 30,000 ms; the analysis labels them idle because they never woke to do work.\n\n`sink-0` (TID 645801) did most of the sink work, running for 24,330.6 ms\u201481.0% of its time\u2014and waking 59,016 times. The comparison says the sinks ran one at a time as work arrived, with the other sinks waiting for work from `parser` (TID 645805). Each idle sink was woken by the parser once, near the end of the trace.\n\nThe parser\u2019s overall hold-up is rated **minor, not a bottleneck**; it was itself mostly paced by `reader` (TID 645806).",
+   "A": "Verdict: yes\n\nThree of the four sink threads stay idle. In the 30.61-second trace, `sink-0` (TID 645801) ran on CPU 5 for about 24.39 seconds, with 59,059 scheduler switch-ins.\n\n`sink-1` (TID 645802, CPU 6), `sink-2` (TID 645803, CPU 7), and `sink-3` (TID 645804, CPU 8) each ran for only about 35\u201339 microseconds and had just two switch-ins apiece. Each also spent about 30 seconds in a `futex` syscall. That scheduler and syscall evidence indicates that `sink-0` did nearly all the sink work while the other three waited."
+  }
+ },
+ {
+  "item": "Q11b__pipeline-5c60",
+  "category": "comprehension",
+  "question": "Are pipeline's sinks sitting idle while one of them does the work? Which ones?",
+  "fault_summary": "the parser hands every item to sink-0 instead of round-robin: sink-0 is busy ~80% of the time and sink-1..3 never get any work",
+  "expected": {
+   "where_any": [
+    "sink-1",
+    "sink-2",
+    "sink-3"
+   ],
+   "where_all": [],
+   "cause": "the parser hands every item to sink-0 instead of round-robin: sink-1, sink-2 and sink-3 never get any work",
+   "numbers": [],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## Sink activity \u2014 whole trace (0\u201330,614 ms)\n\n- **sink-0 (TID 645801)** did nearly all the sinks\u2019 observed work: it ran for **24,330.6 ms (81.0%)**, with **59,016 wake-ups**.\n- **sink-1 (TID 645802), sink-2 (TID 645803), and sink-3 (TID 645804)** were effectively idle: each ran for about **0.05 ms**, was blocked for about **30,000 ms**, and woke only once.\n- The comparison finds a **large** difference between sink-0 and its peers. The other sinks were waiting for work from **parser (TID 645805)**, not waiting for sink-0 or for CPU time; the sinks ran **one after another as work arrived**.\n\n## What sets the pace\n\nParser is the thread other pipeline threads waited on most, but its measured impact is **minor**, not a significant bottleneck. It ran **50.0%** of the trace and was blocked **48.9%** of the time, mostly until **reader (TID 645806)** woke it.\n\nAs one example\u2014not a general explanation for every sink wait\u2014sink-1\u2019s longest wait ended when parser woke it; the reported root activity in that wait included reader being preempted for **2.827 ms**.\n\nThe process inventory also lists watchdog (TID 645800) as idle; it is not one of the sinks.",
+   "B": "Verdict: yes\n\nOver the roughly 30-second trace window, **sink-0 (TID 645801)** did the sink-side work: it ran for **24.392 seconds on CPU 5**. The trace records 118,038 `futex` calls by this thread, totaling about **5.715 seconds**.\n\n**sink-1 (TID 645802), sink-2 (TID 645803), and sink-3 (TID 645804)** were effectively idle. Each accumulated only about **53\u201357 microseconds of scheduled time**, then spent roughly **30 seconds blocked in a `futex` wait**:\n\n- sink-1: CPU 2/6; futex wait about 30.000 seconds.\n- sink-2: CPU 4/7; futex wait about 30.000 seconds.\n- sink-3: CPU 15/8; futex wait about 30.000 seconds.\n\nThe parser (TID 645805) was also active, running **15.089 seconds on CPU 4**. So sink-0 was the active sink while the other three sinks waited; the parser was doing substantial work too."
+  }
+ },
+ {
+  "item": "Q14a__jobrunner-0dd3",
+  "category": "root_cause",
+  "question": "Does jobrunner take seconds from its last job to its exit? If so, how long, and what holds up its shutdown?",
+  "fault_summary": "at the end of the run each job thread, one after another, holds a shared lock for 1.5 s while it flushes its state: the process takes ~6 s to exit after its last job",
+  "expected": {
+   "where_any": [
+    "job-0",
+    "job-1",
+    "job-2",
+    "job-3"
+   ],
+   "where_all": [],
+   "cause": "after the last job, the four job threads, one after another, each hold a shared lock for 1.5 s while they flush their state; the main thread waits to join them",
+   "numbers": [
+    "~6 s from the last job to the exit (\u00b120%)"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## Shutdown\n\n- **Yes\u2014jobrunner\u2019s measured shutdown took about 6.0 seconds.** For PID 653424, the trace measures **6,001.2 ms**, from its first thread-finish wait (join) at **30,094.3 ms** after trace start to process exit at **36,095.5 ms**. The process exited normally with status 0.\n- The measurement begins at the first join; the findings do not give the exact time of the last completed job, so they cannot establish the precise interval from that moment to exit.\n\n## What held it up\n\n- The process bottleneck analysis names the main thread, **jobrunner (TID 653424)**, because other threads often waited for it. But it labels its impact **negligible**: jobrunner was blocked 99.4% of its time, mostly on timers, and was busy only 0.6%. That is not, by itself, a significant process-wide bottleneck.\n- During shutdown, jobrunner\u2019s joins waited **1,500.1 ms for job-0**, **3,000.8 ms for job-1**, and **1,500.0 ms for job-2**. The workers were blocked rather than doing substantial work: job-0 and job-2 mostly in `clock_nanosleep`, and job-1 mostly in `futex`.\n- Around **30,094\u201334,595 ms**, the wait evidence shows jobrunner\u2019s 3-second wait ended when job-1 woke it; job-1\u2019s 3-second wait ended when job-3 woke it, after job-3\u2019s 1.5-second timer wait. This supports timer and inter-thread waits as part of the shutdown delay; the findings do not establish a more specific program-level cause.",
+   "B": "Verdict: yes\n\n`jobrunner` (TID 653424, on CPU 8) takes about **6 seconds to shut down** after its 10 ms sleep loop ends at 01:26:55.183. It exits at 01:27:01.184.\n\nThe main thread spends that time in three futex waits, with worker threads exiting as it waits:\n\n- `job-0` (TID 653426, CPU 3) exits at 01:26:56.683, after a 1.5 s `clock_nanosleep`.\n- `job-3` (TID 653429, CPU 6) exits at 01:26:58.184, after a futex wait and another 1.5 s sleep.\n- `job-1` (TID 653427, CPU 4) exits at 01:26:59.684, after a futex wait and another 1.5 s sleep.\n- `job-2` (TID 653428, CPU 5) exits at 01:27:01.184, after a futex wait and another 1.5 s sleep.\n\nThe main thread\u2019s futex waits last about 1.500, 3.001, and 1.500 seconds. So the shutdown tail is held up by waiting for the job threads to finish; after the last one exits, `jobrunner` exits about 88 microseconds later."
+  }
+ },
+ {
+  "item": "Q15a__batch_server-940f",
+  "category": "root_cause",
+  "question": "Does one thread of batch_server hold up the whole program, so that the program would run at least 25% faster without that thread's delay? If so, which thread, and why is it slow?",
+  "fault_summary": "the flusher holds cache_lock across a 40 ms sleep every round; worker-2 blocks on cache_lock (futex) and every round waits for worker-2 (batch_server <- worker-2 <- flusher <- timer)",
+  "expected": {
+   "where_any": [
+    "worker-2",
+    "flusher"
+   ],
+   "where_all": [],
+   "cause": "worker-2 sets the pace: every round waits for it, and it is blocked on cache_lock because the flusher holds cache_lock across a 40 ms sleep every round (chain: batch_server <- worker-2 <- flusher <- timer)",
+   "numbers": [
+    "rounds take ~42 ms against ~20.5 ms healthy (\u00b125%)"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## Bottleneck and wait chain\n\nAcross the whole trace (offsets **0\u201330,669.96 ms**), **TID 624842 (`worker-2`)** is the significant bottleneck for PID 624827 (`batch_server`). The main thread\u2019s waits on other threads\u2014**19,546.8 ms over 484 waits**\u2014all ended when `worker-2` woke it.\n\nThe recurring chain is: **`batch_server` waits for `worker-2`; `worker-2` waits in `futex` for `flusher` (TID 624844); `flusher` sleeps in `clock_nanosleep` until a timer wakes it.** The trace suggests `flusher` holds the lock `worker-2` is waiting for while it sleeps.\n\n## Estimated impact and example\n\nThe estimate is that removing `worker-2`\u2019s wait for `flusher` would shorten average rounds from **41.766 ms to about 20.392 ms**\u2014about **2.05\u00d7 throughput**, or roughly **51% less time per round**, exceeding the 25% threshold. This is an estimate assuming the rest of each round stays as recorded; other threads\u2019 work still bounds the gain, as it did in 299 of 484 waits.\n\nFor one typical example, at about **17,589.5 ms** into the trace, the main thread\u2019s **40.334 ms** wait depended on `flusher` being in a timer state for **19.938 ms**; `worker-2` was the direct waker.\n\n## Consistency and supporting evidence\n\nThis was not just an occasional spike: TMLL found the main thread\u2019s 484 rounds consistent, with a median of **40.698 ms** and one isolated outlier.\n\nTMLL reports **484 futex waits by `worker-2` totaling 11,217.4 ms**, with a longest wait of **32.784 ms** across two addresses. The lock-hold estimate is less certain: `flusher` held it for about **40.128 ms per round**, including a **40.096 ms sleep**; moving that sleep outside the lock would leave an estimated **0.032 ms** of hold time. That estimate infers the hold interval from when `flusher` first runs after waking until it wakes `worker-2`; the trace does not record lock acquisition and release directly.\n\nThe other three `worker-*` threads finished their work about **19.471 ms** into a round on average, while `worker-2` finished at **41.766 ms**. In the whole trace, the four workers also shared one CPU and were CPU-contended, but the identified recurring wait chain points to `worker-2` waiting on `flusher`\u2019s sleep as the program-level hold-up.",
+   "B": "Verdict: yes\n\nThe critical-path delay is in `flusher` (TID 624844) on CPU 3. During the 30.13-second run, it made 484 `clock_nanosleep` calls averaging 40.1 ms, for 19.42 seconds total.\n\nThat sleep gates the other threads: `worker-2` (TID 624842) waited on a futex that the flusher wakes, spending 11.22 seconds across 484 waits. The main `batch_server` thread (TID 624827) then waited on a futex that `worker-2` wakes, spending 19.55 seconds across 484 waits. Those waits line up with the flusher\u2019s sleep-and-wake cycles.\n\nSo the program is waiting on the flusher\u2019s periodic delay, not on CPU work. The measured delay is well over 25% of the run. The trace supports that speedup opportunity, though it cannot establish the exact runtime after changing the program; it also does not show why the application chose a 40 ms flush interval."
+  }
+ },
+ {
+  "item": "Q16a__crunch-4b6e",
+  "category": "root_cause",
+  "question": "Does one thread of crunch hold up the whole program, so that the program would run at least 25% faster without that thread's delay? If so, which thread, and why is it slow?",
+  "fault_summary": "every calc thread gets the same 10 ms of work, but a monitor thread (SCHED_FIFO 10) on calc-5's CPU spins 20 ms at the start of every round, so calc-5 is runnable but waiting and finishes last; everyone waits for it at the barrier",
+  "expected": {
+   "where_any": [
+    "calc-5",
+    "monitor"
+   ],
+   "where_all": [],
+   "cause": "a monitor thread (SCHED_FIFO 10) on calc-5's CPU spins 20 ms at the start of every round, so calc-5 finishes last and every round waits for it",
+   "numbers": [
+    "rounds take ~30 ms against ~10.5 ms healthy (\u00b125%)"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## Bottleneck and why\n\nAcross the whole trace (0\u201330,541.583 ms), **TID 634386 (`calc-5`)** is the significant bottleneck. In 299 waits, the main thread `crunch` waited on `calc-5` for a total of 9,032.428 ms; those waits account for essentially all of its waits on other threads.\n\nThe chain is: **`crunch` waited for `calc-5`, which was itself delayed waiting for CPU time.** On average per such wait, `calc-5` ran 10.117 ms and waited for a CPU 20.067 ms. This was not system-wide CPU oversubscription: the trace reports an average of 4.0 ready `crunch` threads on the 8 CPUs it used. Instead, **`monitor`\u2014another thread in `crunch`, running at real-time priority 10\u2014held the CPU for 99.7% of `calc-5`\u2019s CPU-wait time**.\n\nFor one typical instance, at offset 28,997.237 ms, `crunch`\u2019s 30.169 ms wait depended on `calc-5`: it was preempted for 20.010 ms, then ran for about 10.136 ms before waking `crunch`.\n\n## Would it clear 25%?\n\nThe analysis estimates that if `calc-5` kept pace with its peers, rounds would be **about 64.9% shorter**\u2014well beyond a 25% reduction in round time. That is an estimate under the stated assumption, not a simulated change or a guarantee of end-to-end speedup. The delay was consistent across rounds: 299 rounds were about 30.219 ms at the median, with one isolated outlier.\n\nThe syscall evidence lists 599 `futex` calls for `calc-5` (21,235.487 ms total), but reports **zero futex wait time** for that thread. The bottleneck finding attributes the delay to waiting for CPU, not to futex contention. Runnable time means a thread is ready to run but waiting for a CPU [3].\n\n## Sources used:\n3) Runnable time and CPU contention - https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/LTTng-Kernel-Analysis.html",
+   "B": "Verdict: no\n\n`crunch` PID/TID **634379** ran for about **30.008 s** (exec at 01:11:00.577120; exit at 01:11:30.585502). Its eight `calc-*` workers, TIDs **634381\u2013634388**, ran on CPUs **4\u201311** and exited within **203 \u03bcs** of one another. Each accumulated about **3.03\u20133.13 s on CPU** and **26.8\u201326.9 s off CPU**, mostly in repeated `futex` waits. That shared pattern doesn\u2019t identify one worker as a straggler.\n\nThe standout long wait is `watchdog`, TID **634380** on CPU **2**: it slept in `clock_nanosleep` for about **29.932 s**. But the main thread exited first, and the watchdog exited only **19 \u03bcs later**; the workers had already exited. `monitor`, TID **634389**, exited about **10 ms before the workers**. These timings don\u2019t support any single thread\u2019s delay making the program at least 25% faster if removed. The trace shows the waits, but not their user-space purpose."
+  }
+ },
+ {
+  "item": "Q16a__crunch-a270",
+  "category": "root_cause",
+  "question": "Does one thread of crunch hold up the whole program, so that the program would run at least 25% faster without that thread's delay? If so, which thread, and why is it slow?",
+  "fault_summary": "every 5 s a monitor thread (SCHED_FIFO 10) on calc-3's CPU spins for 2 s; calc-3 is runnable but barely runs, and its rounds stretch to ~1 s",
+  "expected": {
+   "where_any": [
+    "calc-3",
+    "monitor"
+   ],
+   "where_all": [],
+   "cause": "every 5 s a monitor thread (SCHED_FIFO 10) spins 2 s on calc-3's CPU; calc-3 barely runs, and the whole round waits for it",
+   "numbers": [
+    "those rounds stretch to ~1 s (\u00b130%), 5 times"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## Bottleneck and wait chain\n\nAcross the whole trace (0\u201330,517 ms), **calc-3 (TID 636275)** is the significant bottleneck. The main thread, **crunch (TID 636270)**, waited on calc-3 for 7,684 ms across 18 waits\u201477.5% of its waits on other threads.\n\nThe chain is: **crunch waited for calc-3 to finish; calc-3 was ready to run but waiting for a CPU.** On average per wait, calc-3 ran for 10.180 ms and waited for a CPU for 416.708 ms. The trace attributes 99.8% of its CPU-wait time to **monitor (TID 636280)**, a real-time-priority thread in the same process.\n\n## Size and consistency of the delay\n\nAcross 18 rounds, calc-3 finished an average of **416.322 ms after its calc-* peers**. The average round was 426.962 ms; the analysis estimates rounds would be about **97.5% shorter** if calc-3 kept pace with its peers. That is well above the 25% threshold. This is a round-level estimate, not a measured estimate of total program runtime after a change.\n\nThe delay occurred in every round, rather than only in occasional spikes. For one typical example, at about **14,492 ms** into the trace, crunch\u2019s 560.096 ms wait depended on calc-3 being preempted for 550.090 ms, then running for 10.006 ms before crunch resumed. The process was not oversubscribed on average: about 3 of its threads were ready to run at once for the 8 CPUs it used.",
+   "B": "Verdict: no\n\nThe obvious sleeper is the watchdog, TID 636271. On CPU 13 it spends 29.911 seconds in one `clock_nanosleep`, from 0.092277 to 30.003543 seconds into the trace. But it is not holding the program up for that whole time: the eight `calc-*` threads (TIDs 636272\u2013636279) continue waking and running, then all exit within 3 microseconds of one another at about 30.00285 seconds. Each spends about 2.35\u20132.39 seconds on CPU and repeatedly waits in `futex`.\n\nThe main `crunch` thread, TID 636270, also continues periodic work until it exits at 30.003521 seconds; its 229 `clock_nanosleep` calls total about 19.99 seconds, with none longer than 100.2 ms. The watchdog exits just 21 microseconds after the main thread. So removing its long sleep alone would not make the program at least 25% faster; the trace shows the other threads running until roughly the same 30-second endpoint."
+  }
+ },
+ {
+  "item": "Q16a__crunch-a6c0",
+  "category": "root_cause",
+  "question": "Does one thread of crunch hold up the whole program, so that the program would run at least 25% faster without that thread's delay? If so, which thread, and why is it slow?",
+  "fault_summary": "calc-0 gets 4x the work (40 ms per round) and the other seven get 10 ms, every round; the others finish early and wait at the barrier for calc-0",
+  "expected": {
+   "where_any": [
+    "calc-0"
+   ],
+   "where_all": [],
+   "cause": "calc-0 gets 4x the work of the others (40 ms per round against 10 ms) and every round waits for it at the barrier",
+   "numbers": [
+    "rounds take ~41 ms against ~10.5 ms healthy (\u00b125%)"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## Bottleneck and wait chain\n\nOver the whole trace (0\u201330,554 ms), **TID 633757 (`calc-0`)** is the significant bottleneck for PID 633755 (`crunch`). Across 300 rounds, `crunch`\u2019s waits on other threads were all ended by `calc-0`. The chain is: **`crunch` waited for `calc-0`, which was held up doing its own CPU work**.\n\n`calc-0` finished an average of **29.902 ms after** the other calculation threads each round: about **40.501 ms** into a round, versus **10.600 ms** for the last of its peers. It spent about **40.352 ms per wait running**, with only **0.008 ms** waiting for CPU on average.\n\n## Example and impact\n\nA typical example began at **27,600.597 ms** into the trace: `crunch`\u2019s wait depended on `calc-0` running for **40.551 ms**.\n\nThe analysis estimates that rounds would be **about 73.8% shorter if `calc-0` kept pace with its peers**\u2014well beyond the 25% faster threshold. That is an estimate based on that assumption, not a measurement of a modified run. The delay was consistent across rounds, rather than just an occasional spike.",
+   "B": "Verdict: no\n\n`crunch` (PID/TID 633755) runs for about 30.018 seconds, but the trace points to a timed run, not one worker extending the program. Its watchdog, TID 633756, sleeps in `clock_nanosleep` for 29.942 seconds. The main thread also spends 17.787 seconds in 299 `clock_nanosleep` calls and 12.149 seconds in `futex` calls. Together those waits account for nearly the whole run.\n\nThe slowest-looking worker is `calc-0` (TID 633757, CPU 4): it uses 12.134 seconds of CPU, compared with about 3.09\u20133.14 seconds for each of `calc-1` through `calc-7` (TIDs 633758\u2013633764, CPUs 5\u201311). In a representative cycle, the other workers finish around 29.711 seconds while `calc-0` continues until 29.741 seconds. The main thread then waits until the next roughly 100 ms cycle at 29.801 seconds, leaving time after `calc-0` finishes.\n\nAt shutdown, the main thread wakes all eight workers; they exit within about 4 microseconds of one another, and `crunch` exits about 1 ms later. So `calc-0` does more CPU work, but the trace does not show it holding up the 30-second run. The kernel trace cannot identify why it receives or needs more CPU time; it does not include the worker\u2019s user-space code."
+  }
+ },
+ {
+  "item": "Q16b__crunch-4b6e",
+  "category": "root_cause",
+  "question": "Is there a bottleneck in crunch? If so, which thread is it, and why?",
+  "fault_summary": "every calc thread gets the same 10 ms of work, but a monitor thread (SCHED_FIFO 10) on calc-5's CPU spins 20 ms at the start of every round, so calc-5 is runnable but waiting and finishes last; everyone waits for it at the barrier",
+  "expected": {
+   "where_any": [
+    "calc-5",
+    "monitor"
+   ],
+   "where_all": [],
+   "cause": "a monitor thread (SCHED_FIFO 10) on calc-5's CPU spins 20 ms at the start of every round, so calc-5 finishes last and every round waits for it",
+   "numbers": [
+    "rounds take ~30 ms against ~10.5 ms healthy (\u00b125%)"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: yes\n\n## Bottleneck\n\nAcross the whole trace window (offsets **0\u201330,541.6 ms**), **TID 634386 (`calc-5`)** is a significant bottleneck for `crunch` (PID 634379). The main thread waited on `calc-5` in **299 rounds**, accounting for essentially **100% of its waits on other threads**\u2014**9,032.4 ms** total. On average, `calc-5` finished **19.643 ms after** the other `calc-*` threads; the analysis estimates rounds would be **about 64.9% shorter** if it kept up.\n\n## Why\n\nThe recurring wait chain is: **`crunch` waits for `calc-5`, which is delayed waiting for CPU time**. During those waits, `calc-5` averaged **10.117 ms running** and **20.067 ms waiting for a CPU**. A runnable thread is ready to execute but not currently running; substantial runnable time can indicate CPU contention or scheduling delay [1].\n\nThe CPU competition findings attribute **99.7%** of `calc-5`\u2019s CPU-wait time (**5,982.4 ms**) to **`monitor` (TID 634389)**, a real-time-priority-10 thread in the same process. Overall, the process was **not oversubscribed**: it averaged **4.0 ready threads across 8 CPUs**.\n\n## Example and consistency\n\nA typical main-thread wait lasted **30.169 ms**, starting at offset **28,997.237 ms**. In that gap, `calc-5` was preempted for about **20.010 ms**, then ran; it was also the thread that directly woke `crunch`.\n\nThis was consistent across rounds, rather than just occasional spikes: the median was **30.219 ms** across **299 rounds** (p99 **30.494 ms**), with **one** isolated round standing out.\n\nTMLL\u2019s syscall table reports **zero futex waits** for `calc-5`; its top syscall was `futex` (599 calls, 21,235.487 ms total), but the wait-chain analysis identifies the bottleneck portion as **CPU contention**, not futex blocking.\n\n## Other threads\n\n`calc-5` spent **20.0%** of its time waiting for a CPU, compared with **0.0\u20130.1%** for the other `calc-*` threads. The watchdog was idle, and the other calculator threads were mostly blocked between work; those waits are not identified as the bottleneck.\n\n### All sources used:\n1) Runnable time and CPU contention - https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/LTTng-Kernel-Analysis.html",
+   "A": "Verdict: yes\n\nThe bottlenecked thread is **`calc-5` (TID 634386)** in the `crunch` process (PID 634379), on **CPU 9**. It ran for 3.03 seconds during the 30-second trace window, compared with about 3.09\u20133.13 seconds for the other `calc-*` threads.\n\nThe scheduling events show why: `calc-5` was switched out while still runnable 312 times. In 283 of those switches, **`monitor` (TID 634389)** ran next on the same CPU. `calc-5` then waited an aggregate 5.66 seconds to run again, averaging 18 ms per wait and reaching 20 ms. The other `calc-*` threads had under 1 ms of aggregate runnable wait each.\n\n`monitor` spent about 5.98 seconds running on CPU 9 and made 299 `clock_nanosleep` calls totaling 23.94 seconds (about 80 ms each). That leaves roughly 20 ms per cycle for it to run and delay `calc-5`. The trace therefore points to CPU 9 contention from `monitor` as the bottleneck affecting `calc-5`."
+  }
+ },
+ {
+  "item": "Q17a__pipeline-6056",
+  "category": "root_cause",
+  "question": "Does one thread of pipeline hold up the whole program, so that the program would run at least 25% faster without that thread's delay? If so, which thread, and why is it slow?",
+  "fault_summary": "the parser spends 1.5 ms per item instead of 0.2 ms, below the reader's 2000 items per second: its input queue stays full, the reader blocks on it and the sinks starve",
+  "expected": {
+   "where_any": [
+    "parser"
+   ],
+   "where_all": [],
+   "cause": "the parser spends 1.5 ms per item, too slow for the reader's 2000 items per second: its input queue stays full, the reader blocks on it and the sinks starve",
+   "numbers": [
+    "~1.5 ms per item (\u00b130%), ~20578 items in the run against 60,000 healthy"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: cannot tell from this trace\n\n## Bottleneck and dependency\n\nAcross the whole trace window (offsets **0\u201330,712.7 ms**), the findings identify **TID 643703 (`parser`)** as a significant bottleneck: other threads\u2019 waits ended with a wake-up from it for **139,490.3 ms**, or **69.9%** of their total ended-wait time. The parser was running **99.8%** of its time, so the analysis says it was busy and could not keep up. The four `sink-*` threads each waited on the parser for about **27.4\u201327.5 seconds** in total.\n\nThe reported dependency is that the sinks and reader waited on the parser; the parser\u2019s own waits were mostly ended by the reader. One example, at about **4,803.1 ms** into the trace, is the reader waiting for the parser, which ran for **1.604 ms** before waking it. This is a concrete wait-chain example, not a speedup estimate. [1]\n\n## 25% speedup threshold\n\nThe trace supports identifying the parser as a bottleneck, but it provides **no estimate of how much faster the whole program would run if that thread\u2019s delay were removed**. So it cannot establish that the improvement would reach **25%**. The findings do show the process was not CPU-oversubscribed: its threads waited **702.5 ms** for a CPU across the window, averaging **1.4** ready threads for **5** CPUs used.\n\n## All sources used:\n1) Critical Path (Process Wait Analysis) - https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/LTTng-Kernel-Analysis.html",
+   "A": "Verdict: no\n\nThe pipeline process, PID 643696, ran for about 30.18 s. Two threads span almost that whole time:\n\n- `reader` (TID 643704) ran on CPU 3 and repeatedly called `clock_nanosleep`. For example, one call lasted about 0.556 ms and the next about 0.492 ms. It exited after almost exactly 30 s.\n- `parser` (TID 643703) ran on CPU 4 for about 30.093 s of CPU time, staying runnable rather than blocked in a slow syscall. It exited about 95 ms after the reader.\n\nThe four sink threads exited within about 0.5 ms of the parser. The trace therefore shows the reader\u2019s sleep pacing and the parser\u2019s CPU use overlapping for nearly the whole run; it does not show one thread whose delay alone accounts for a 25% speedup. It also lacks user level stacks or pipeline queue events, so I can\u2019t tell whether the parser is doing useful work or spinning while waiting for input."
+  }
+ },
+ {
+  "item": "Q17b__pipeline-6056",
+  "category": "root_cause",
+  "question": "Is there a bottleneck in pipeline? If so, which thread is it, and why?",
+  "fault_summary": "the parser spends 1.5 ms per item instead of 0.2 ms, below the reader's 2000 items per second: its input queue stays full, the reader blocks on it and the sinks starve",
+  "expected": {
+   "where_any": [
+    "parser"
+   ],
+   "where_all": [],
+   "cause": "the parser spends 1.5 ms per item, too slow for the reader's 2000 items per second: its input queue stays full, the reader blocks on it and the sinks starve",
+   "numbers": [
+    "~1.5 ms per item (\u00b130%), ~20578 items in the run against 60,000 healthy"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: yes\n\n## Bottleneck\n\nOver the whole trace (0\u201330,712.7 ms), **TID 643703 (`parser`)** is a significant bottleneck. Other threads\u2019 waits ended with a wake-up from it for **69.9% of their total wait time (139,490.3 ms)**, while the parser was running **99.8%** of its time and blocked only **0.002%**. The finding identifies it as busy and unable to keep up.\n\n## Wait chain and example\n\nThe sink threads and reader waited on the parser: the four sinks each spent about **27.4\u201327.5 seconds** waiting for it, and the reader spent **29,522.2 ms** waiting for it. The main `pipeline` thread, by contrast, spent **29,993.8 ms** in timer sleeps; that is idle waiting, not evidence that it is the bottleneck. The parser was itself reported as mostly waking after a wait on the reader, though it was blocked for only **0.589 ms** overall.\n\nFor a concrete instance, at about **4,803.1 ms** into the trace, the reader\u2019s longest wait was **1.604 ms**. It depended on the parser running for that interval, and the parser was the direct waker.\n\n## Consistency and threads\n\nThe parser\u2019s cycles were reported as **varying throughout** the trace (median **1.457 ms**); there is no separate round-consistency finding to establish whether this bottleneck occurs in every round.\n\nThe other threads were: `sink-0` (TID 643699), `sink-1` (643700), `sink-2` (643701), `sink-3` (643702), `reader` (643704), main `pipeline` (643696), and `watchdog` (643698). The watchdog was idle; the sinks were mostly blocked, waiting for parser-produced work.",
+   "A": "Verdict: yes\n\nThe bottleneck is the `parser` thread (TID 643703) in the `pipeline` process (PID 643696). During the 30.709-second trace, it ran for 30.093 seconds on CPU 4 and made about 41,000 futex wake calls. Its futex wait time was negligible, so it was mostly active rather than blocked.\n\nThe other stages were mostly waiting: `reader` (TID 643704) accumulated 29.877 seconds in futex waits; each of `sink-0` through `sink-3` (TIDs 643699\u2013643702) accumulated about 27.58\u201327.60 seconds waiting on CPUs 5\u20138, while running for only about 2.5 seconds each. That pattern points to the parser limiting progress through the pipeline."
+  }
+ },
+ {
+  "item": "Q18b__kvstore-4bd0",
+  "category": "root_cause",
+  "question": "Is there a bottleneck in kvstore? If so, which thread or process is it, and why?",
+  "fault_summary": "the server (process kvd) spends 3 ms per request instead of 0.1 ms, all on one CPU: the server is saturated and the clients spend most of their time blocked waiting for its replies",
+  "expected": {
+   "where_any": [
+    "kvd",
+    "kvd-conn-0",
+    "kvd-conn-1",
+    "kvd-conn-2",
+    "kvd-conn-3"
+   ],
+   "where_all": [],
+   "cause": "the server process kvd spends 3 ms per request instead of 0.1 ms, all on one CPU: it is saturated and the clients wait for its replies",
+   "numbers": [
+    "~3 ms of server work per request (\u00b130%); requests take ~12 ms against ~0.4 ms healthy"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: no\n\n## Bottleneck\n\nOver the whole trace (offsets **0\u201330,614.6 ms**), the analysis finds **no `kvstore` thread bottlenecking the others** (medium confidence). Most of the threads\u2019 waiting\u2014**66.5%**\u2014ended with network activity, not another `kvstore` thread.\n\nThe wait chain was: **TID 648040 (`kvstore`)** waited about **30,004 ms** in a futex wait until **TID 648043 (`client-0`)** woke it. `client-0` spent about **29,794 ms** across 2,482 network waits, averaging **12.004 ms** each; the trace attributes the packet wake-ups to **local process PID 648042 (`kvd`)**. Thus, the trace points to waiting on network exchanges with `kvd`, rather than an internal thread holding up the clients. The `kvd` attribution is medium confidence.\n\nAll four `client-*` threads were mostly blocked, but their CPU times were very similar (**47.4\u201347.8 ms** each), and the analysis found no difference among them.",
+   "A": "Verdict: yes\n\nThe bottleneck is in `kvd` (PID 648042), specifically its four request-handler threads: `kvd-conn-0` (TID 648047), `kvd-conn-1` (648048), `kvd-conn-2` (648049), and `kvd-conn-3` (648050). Over the 30.6-second trace, they ran on CPU 7 for about 7.495, 7.499, 7.499, and 7.505 seconds respectively\u2014nearly 30 seconds of CPU time on that one CPU. CPU 7 was idle or running other tasks for only about 0.6 seconds, while CPU 3 and CPU 6 were idle for about 30.362 and 30.213 seconds.\n\nThe client threads (`client-0` through `client-3`, TIDs 648043\u2013648046) on CPUs 3\u20136 each made roughly 2,481\u20132,484 `recvfrom()` calls, averaging 12.05\u201312.07 ms; their `sendto()` calls averaged about 15 \u03bcs. That pattern is consistent with clients waiting for responses while the server handlers share a saturated CPU. The `kvstore` main thread (TID 648040) spent about 30 seconds in `futex()`, so it was waiting rather than consuming the constrained CPU. The trace identifies the thread and CPU bottleneck, but contains no user-space stacks to pinpoint the hot function."
+  }
+ },
+ {
+  "item": "Q19b__batch_server-41b3",
+  "category": "root_cause",
+  "question": "Did batch_server get stuck or stop responding? When, and why?",
+  "fault_summary": "at 40% of the run, worker-1 takes lock A then B while worker-3 takes B then A; both block forever, and the coordinator waits forever for the round",
+  "expected": {
+   "where_any": [
+    "worker-1",
+    "worker-3"
+   ],
+   "where_all": [],
+   "cause": "at ~12 s (40% of the run) worker-1 and worker-3 deadlock on locks A and B; the coordinator waits for their round forever, so the program makes no progress until the end",
+   "numbers": [
+    "it stops at ~12 s (\u00b11 s)"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## When and what happened\n\n- Over the whole trace (offsets **0\u201330,299 ms**), `batch_server` stopped making progress at about **12,115 ms**. Six of its seven active threads then remained blocked for the final **18,180 ms**\u2014about **60% of the trace**\u2014in waits with no timeout.\n- The main thread (TID 626810), `worker-0`, `worker-1`, `worker-2`, `worker-3`, and `flusher` were still blocked when the trace ended. Only the watchdog ran afterward, for **11 brief runs totaling 0.089 ms**.\n\n## Likely reason\n\n- `worker-1` and `worker-3` entered lock-style futex waits on different addresses within about **2 ms** of each other, and neither was woken. This pattern is **consistent with a deadlock**; the trace cannot prove who held the locks.\n- The other four blocked threads were waiting on futexes with no timeout. Their waits also never ended in the trace.",
+   "B": "Verdict: yes\n\nbatch_server stopped making progress around **2026-11-21 01:04:49.33 UTC**\u2014about 12.12 seconds into the trace\u2014and remained inactive for the roughly 18.17 seconds left in the capture.\n\nThe process ran on CPU 3. Its main thread, **batch_server TID 626810**, had been waking about every 20 ms and dispatching work to **worker-0 (626812)**, **worker-1 (626813)**, **worker-2 (626814)**, **worker-3 (626815)**, and **flusher (626816)**. The last dispatch was at about 01:04:49.32. By 01:04:49.33, those threads had entered futex waits; their wait syscalls had no matching exits by trace end. There are no later wakeups or process-exit events for them. The watchdog thread, TID 626811, remained alive.\n\nThis points to a userspace synchronization stall, or a work pipeline that stopped receiving work. The trace shows no CPU starvation, blocking disk I/O, or signal that explains the halt. It does not include client request/response evidence or application stacks, so it cannot establish whether clients were waiting or identify the exact software cause."
+  }
+ },
+ {
+  "item": "Q22a__crunch-4b6e",
+  "category": "root_cause",
+  "question": "Do crunch's calc threads keep waiting at their barrier for the same late thread? If so, which thread, and why is it late?",
+  "fault_summary": "every calc thread gets the same 10 ms of work, but a monitor thread (SCHED_FIFO 10) on calc-5's CPU spins 20 ms at the start of every round, so calc-5 is runnable but waiting and finishes last; everyone waits for it at the barrier",
+  "expected": {
+   "where_any": [
+    "calc-5"
+   ],
+   "where_all": [],
+   "cause": "every round the calc threads wait at the barrier for calc-5, which is late because a monitor thread (SCHED_FIFO 10) spins 20 ms on its CPU at the start of the round",
+   "numbers": [],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: yes\n\n## Recurring bottleneck \u2014 whole trace, offsets 0\u201330,541.6 ms\n\n**calc-5 (TID 634386) is the same late thread in every one of the 299 rounds.** The other calc threads\u2019 repeated futex waits are signal-like waits, not lock contention; they are woken by the main thread, `crunch` (TID 634379). The main thread, in turn, waited on calc-5 in 299 rounds. This is consistent with the calc threads waiting for a round release while calc-5 finishes.\n\nThe hold-up is **CPU scheduling delay**: calc-5 averaged about **10.117 ms running and 20.067 ms waiting for a CPU per wait**. A real-time-priority-10 thread, `monitor` (TID 634389), held the CPU for **99.7%** of calc-5\u2019s CPU-wait time. The calc group was not oversubscribed overall, so the finding points to this within-process priority scheduling pattern rather than general CPU overload.\n\n## One example and consistency\n\nIn a typical example beginning at **28,997.2 ms**, `crunch` waited **30.169 ms** on calc-5. Calc-5 was preempted for about **20.010 ms**, then ran about **10.136 ms**; it was the direct waker when `crunch` resumed.\n\nAcross the 299 rounds, calc-5 finished an average **19.643 ms after its peers** (median **19.663 ms**). The delay was consistent round to round: median **30.219 ms**, p99 **30.494 ms**; one isolated round stood out.\n\n## Syscall evidence and thread comparison\n\nTMLL reports calc-5 made **599 futex calls** totaling **21,235.487 ms**, but its futex-contention table classifies **0 waits**. The recurring CPU-delay chain above comes from the process wait-chain and scheduling findings, not that futex-wait classification.\n\nFor comparison, calc-5 waited **6,003.0 ms** for a CPU over the trace, versus about **11\u201324.5 ms** for the other calc threads. The other calc threads were blocked about **89.5%** of the time, while calc-5 was blocked **69.8%** and waiting for a CPU **20.0%**.",
+   "A": "Verdict: yes\n\nThe repeated completion rendezvous is held up by **calc-5 (TID 634386) on CPU 9**. `crunch` (TID 634379, CPU 6) waits in `futex()` on address `93967197869952`; `calc-5` wakes that same futex just before `crunch` resumes. This pairing occurs in all 299 observed rounds. The waits have a median duration of **30.216 ms** (range **30.076\u201330.674 ms**). For example, `crunch` waits from 01:11:00.753630 to 01:11:00.783982, about **30.352 ms**; `calc-5` wakes it at 01:11:00.783966.\n\nThe delay is scheduling interference on CPU 9. In that round, `calc-5` is runnable when the `monitor` thread (TID 634389) preempts it at 01:11:00.754044. The monitor runs on CPU 9 until 01:11:00.774057\u2014about **20 ms**\u2014then sleeps in `clock_nanosleep()` for about **80 ms**. Its trace shows `sched_setscheduler` with policy 1 (`SCHED_FIFO`). The same roughly 20 ms monitor run recurs every 100 ms, and `calc-5` is again the thread whose futex wake releases `crunch`\u2019s wait.\n\nThe CTF does not label a user space barrier directly; this identification comes from the recurring futex wait/wake pattern and the scheduler events."
+  }
+ },
+ {
+  "item": "Q22b__crunch-4b6e",
+  "category": "root_cause",
+  "question": "Is everyone in crunch waiting for one slow thread? Which one, and why?",
+  "fault_summary": "every calc thread gets the same 10 ms of work, but a monitor thread (SCHED_FIFO 10) on calc-5's CPU spins 20 ms at the start of every round, so calc-5 is runnable but waiting and finishes last; everyone waits for it at the barrier",
+  "expected": {
+   "where_any": [
+    "calc-5"
+   ],
+   "where_all": [],
+   "cause": "every round the calc threads wait at the barrier for calc-5, which is late because a monitor thread (SCHED_FIFO 10) spins 20 ms on its CPU at the start of the round",
+   "numbers": [],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## Bottleneck and wait chain\n\nAcross the whole trace (offsets **0\u201330,541.6 ms**), **TID 634386 (`calc-5`)** is the significant bottleneck. The main thread, **TID 634379 (`crunch`)**, waited on `calc-5` for **9,032.4 ms over 299 rounds**\u2014effectively all of its waits on other threads. On average, `calc-5` finished **19.6 ms after** its other `calc-*` peers in rounds averaging **30.3 ms**.\n\nThe recurring chain is: **`crunch` waited for `calc-5`, which was ready to run but delayed by CPU contention.** `calc-5` averaged **10.1 ms running** and **20.1 ms waiting for a CPU** per such wait. The CPU was held for **99.7%** of that delay by **`monitor` (TID 634389)**, a same-process thread at real-time priority 10. So `calc-5` is slow to finish not because the traced wait chain shows it blocked on a lock, but because it is kept off the CPU.\n\nA typical example at about **28,997.2 ms** into the trace shows `calc-5` preempted for **20.0 ms**, then running for about **10.1 ms** before waking `crunch`.\n\n## How much it matters\n\nThe analysis estimates rounds would be about **64.9% shorter** if `calc-5` kept pace with its peers; this is an estimate assuming it did so. The delay is consistent across rounds: **299 rounds** had a median of **30.219 ms** (p99 **30.494 ms**), rather than the issue being only occasional spikes.\n\nIt is not literally every thread waiting on `calc-5` all the time: the `calc-*` workers generally wait for `crunch` to release new work, and `monitor` spends **80.0%** of its time sleeping on its timer. The watchdog was idle. But `calc-5` is what holds up the main thread\u2019s progress each round, making it the program-level bottleneck.\n\n## Supporting thread evidence\n\nOver the whole trace, `calc-5` waited **6,003.0 ms for a CPU**, versus **19.7 ms** for the median of its `calc-*` peers. `crunch` was blocked **99.6%** of its time, while the `calc-*` threads were blocked roughly **69.8\u201389.6%**; those totals include waits for work and are not all time waiting on `calc-5`.\n\nTMLL reports **zero futex waits** for `calc-5` in its futex-contention table, despite **599 futex calls** totaling **21,235.5 ms** overall. The bottleneck chain attributes the delay holding up `crunch` to CPU contention, not futex contention. Critical-path analysis follows which work determines a process\u2019s progress [1], and runnable time means a thread is ready but waiting to execute [3].\n\n## All sources used:\n\n1) Critical Path (Process Wait Analysis) - https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/LTTng-Kernel-Analysis.html  \n3) Runnable time and CPU contention - https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/LTTng-Kernel-Analysis.html",
+   "B": "Verdict: yes\n\nThe gate is the main `crunch` thread, PID/TID 634379. Its loop spends a median 69.75 ms in `clock_nanosleep` and 30.22 ms in a timed `futex` wait, making a roughly 100 ms cycle. It issues 300 scheduler wakeups to each of the eight workers, `calc-0` through `calc-7` (TIDs 634381\u2013634388), at a median interval of 100 ms. Those workers spend about 26.8 seconds of the roughly 29.9-second run in timed futex waits; `calc-5` (TID 634386) gets the same 300 wakeups.\n\nSo the trace points to the coordinator pacing the workers, rather than one unusually slow `calc-*` worker. The separate `watchdog` thread (TID 634380) does sleep for 29.93 seconds, but the trace shows TID 634379 waking the calculation workers."
+  }
+ },
+ {
+  "item": "Q22b__crunch-a270",
+  "category": "root_cause",
+  "question": "Is everyone in crunch waiting for one slow thread? Which one, and why?",
+  "fault_summary": "every 5 s a monitor thread (SCHED_FIFO 10) on calc-3's CPU spins for 2 s; calc-3 is runnable but barely runs, and its rounds stretch to ~1 s",
+  "expected": {
+   "where_any": [
+    "calc-3"
+   ],
+   "where_all": [],
+   "cause": "the other calc threads wait at the barrier for calc-3, which is kept off its CPU by the monitor thread (SCHED_FIFO 10) spinning 2 s every 5 s",
+   "numbers": [],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: yes\n\n## Bottleneck and wait chain\n\nAcross the whole trace (offsets **0\u201330,517 ms**), **TID 636275 (`calc-3`)** is the significant bottleneck for `crunch` (PID 636270). The main thread\u2019s waits on other threads ended with `calc-3` waking it **77.5% of the time**\u2014**7,684 ms over 18 waits**.\n\nThe chain is: **`crunch` waited for `calc-3`; `calc-3` was ready to run but waiting for a CPU.** On average, `calc-3` waited **416.708 ms for a CPU per relevant wait**, while running **10.180 ms**. The trace attributes almost all that CPU delay to **`monitor` (TID 636280), in the same process, at real-time priority 10**. A runnable thread waiting for CPU indicates scheduling contention [3].\n\nSo `calc-3` is the thread holding up `crunch`\u2019s progress, but the evidence points to **CPU scheduling delay**, not unusually long computation by `calc-3` itself. The process was not oversubscribed overall: it averaged **3.0 ready threads across the 8 CPUs it used**. The critical-path analysis identifies which thread\u2019s delay mattered to the main thread\u2019s progress [1].\n\n## One example and consistency\n\nA typical example began at offset **14,492.026 ms**: during a **560.096 ms** wait by `crunch`, `calc-3` was preempted for **550.090 ms**, then ran for **10.006 ms** and woke `crunch`.\n\nThis was consistent across the **18 rounds**, not just occasional spikes: the median delay was **560.042 ms** (p99 **960.091 ms**). On average, `calc-3` finished **416.322 ms after** its other `calc-*` peers; the analysis estimates rounds would be **about 97.5% shorter if it kept up with them**.\n\n## Scope of \u201ceveryone\u201d and thread evidence\n\nNot literally every thread is waiting on `calc-3`: the wait-chain finding concerns the main thread\u2019s progress, and the other calculator threads\u2019 waits are largely waits to be woken by `crunch` for work. Over the whole trace, the eight `calc-*` threads ran in parallel on average, but `calc-3` waited **7,515.4 ms for CPU**, compared with **14.3 ms for the others** (median). The thread breakdown shows `crunch` blocked **99.6%** of its time; `calc-0`, `calc-1`, `calc-2`, and `calc-4` through `calc-7` were each blocked about **92%**; `calc-3` was blocked **67.0%** and waiting for CPU **25.1%**; `monitor` ran **38.7%** of its time; and `watchdog` was idle.\n\nThe syscall table reports **466 futex calls totaling 27,564.830 ms** for `calc-3`, but its futex contention summary found **101 waits totaling 0.683 ms**. Those totals include waits for new work; they do not show that lock contention is the cause of this bottleneck. Futex waits can represent synchronization waits, but the wait-chain evidence here identifies CPU delay as the root activity [2].\n\n### Sources used:\n1) Critical Path (Process Wait Analysis) - https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/LTTng-Kernel-Analysis.html\n2) Blocking in futex - https://man7.org/linux/man-pages/man2/futex.2.html\n3) Runnable time and CPU contention - https://archive.eclipse.org/tracecompass/doc/stable/org.eclipse.tracecompass.doc.user/LTTng-Kernel-Analysis.html",
+   "A": "Verdict: yes\n\nThe eight `calc-*` worker threads are gated by the `crunch` leader, TID **636270**. The leader\u2019s `clock_nanosleep` runs **229 times**, with a median duration of **89.4 ms** and a total of about **20 seconds** in this 30.5-second trace. After each sleep, it issues futex wakeups for the workers; its 1,840 wake calls all return `1` (one waiter woken).\n\nEach worker has 230 futex waits, with median durations around **89.6\u201389.8 ms**. They run mostly on separate CPUs: `calc-0` TID 636272 on CPU 4, `calc-1` 636273 on CPU 5, `calc-2` 636274 on CPU 6, `calc-3` 636275 on CPU 7, `calc-4` 636276 on CPU 8, `calc-5` 636277 on CPU 9, `calc-6` 636278 on CPU 10, and `calc-7` 636279 on CPU 11. The leader issues the wakeups on CPU 0 in the observed cycles.\n\nSo the bottleneck is the leader\u2019s repeated sleep, not a slow calculator thread or an observed I/O delay. The trace shows the sleep pattern; it cannot establish whether the pacing is intentional in the program\u2019s design."
+  }
+ },
+ {
+  "item": "Q23a__reporter-285d",
+  "category": "root_cause",
+  "question": "Does interrupt handling take a large share (10% or more) of the CPU that reporter's render thread runs on? If so, which interrupts, how much of that CPU do they take, and when?",
+  "fault_summary": "from 30% to 70% of the run an archive thread on render's CPU re-reads stored reports with direct 4 KB reads, 64 in flight; their completion interrupts land on render's CPU, taking about a fifth of it, and each report takes longer",
+  "expected": {
+   "where_any": [
+    "nvme0q3",
+    "nvme"
+   ],
+   "where_all": [],
+   "cause": "from ~9 s to ~21 s, the disk's (NVMe, nvme0q3) completion interrupts on CPU 3, render's CPU, take about a fifth of that CPU; they come from the archive thread's direct 4 KB reads",
+   "numbers": [
+    "~20% of CPU 3 (accept 10-35%)",
+    "from ~9 s to ~21 s (\u00b11 s)",
+    "~2.3 million interrupts (~190,000 per second) (\u00b130%)"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: yes\n\n## Interrupt handling\n\nAcross the whole trace, interrupts took **8.6% of CPU 3**, where the render thread ran for **4,032.0 ms** (essentially all its CPU time). But during **9,199\u201321,464 ms from the trace start**, interrupt handling peaked at **21.9%** of that CPU, exceeding the 10% threshold.\n\nThe interrupt time was mostly **IRQ 104 (`nvme0q3`)**: **2,600.2 ms** over the trace. Other recorded sources were **softirq TIMER** (16.1 ms), **softirq SCHED** (8.4 ms), and **softirq RCU** (0.5 ms).",
+   "A": "Verdict: yes\n\nThe reporter\u2019s `render` thread (TID 663966) ran on CPU 3. **During a 12-second interval, interrupt handling took about 21.5% of that CPU.** Nearly all of it was hard IRQ 104, `nvme0q3`: 2.576 seconds of handler time between 9 and 21 seconds after the trace began (2026-11-21 01:30:23.872\u201301:30:35.872 UTC). Per-second shares were 19.4% in the first second and about 21.5\u201321.8% in the following seconds, peaking at 21.8%.\n\nAcross the full 30.66-second trace, `nvme0q3` took 2.600 seconds, or 8.48% of CPU 3; softirqs added only 25 ms. So the threshold was exceeded during that interval, but not as a full-trace average.\n\nFor context, the IRQ intervals overlapped the render thread\u2019s scheduled intervals for 74.7 ms, about 1.8% of those intervals. The CPU-wide spike therefore does not mean the render thread itself was interrupted for 21.5% of its scheduled time."
+  }
+ },
+ {
+  "item": "Q23b__reporter-285d",
+  "category": "root_cause",
+  "question": "Are interrupts eating the CPU that reporter runs on? Which ones, and how much?",
+  "fault_summary": "from 30% to 70% of the run an archive thread on render's CPU re-reads stored reports with direct 4 KB reads, 64 in flight; their completion interrupts land on render's CPU, taking about a fifth of it, and each report takes longer",
+  "expected": {
+   "where_any": [
+    "nvme0q3",
+    "nvme"
+   ],
+   "where_all": [],
+   "cause": "from ~9 s to ~21 s, the disk's (NVMe, nvme0q3) completion interrupts on CPU 3, render's CPU, take about a fifth of that CPU; they come from the archive thread's direct 4 KB reads",
+   "numbers": [
+    "~20% of CPU 3 (accept 10-35%)",
+    "from ~9 s to ~21 s (\u00b11 s)",
+    "~2.3 million interrupts (~190,000 per second) (\u00b130%)"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## Interrupt CPU use\n\nOver the whole trace (0\u201330,663 ms), CPU 3\u2014the CPU reporter ran on\u2014spent **8.6%** of its time handling interrupts. The peak was **21.9%** during **9,199\u201321,464 ms**, which the analysis labels heavy.\n\nThe main source was **IRQ 104 (`nvme0q3`)**, accounting for **2,600.2 ms** of interrupt handling over the trace. The other recorded sources were **softirq TIMER (16.1 ms)**, **softirq SCHED (8.4 ms)**, and **softirq RCU (0.5 ms)**.\n\nThis is a clear CPU cost during the peak stretch, though the whole-trace average was below 10%. The process bottleneck finding separately rates reporter\u2019s hold-up as **negligible**, mostly due to its timer waits.",
+   "B": "Verdict: yes\n\nThe large interrupt load hits CPU 3 while the reporter process\u2019s `archive` thread (TID 663967) is running. IRQ 104, named `nvme0q3`, accounts for **2,037,832 handler calls and 2.253 s** of interrupt time during that thread\u2019s roughly **9.616 s** of scheduled intervals on CPU 3\u2014about **23.4%** of those intervals. The average handler span was 1.11 \u03bcs; the longest was 19.83 \u03bcs. Across the full 30.66 s trace, IRQ 104 used 2.600 s on CPU 3, or about 8.5% of that CPU\u2019s trace time.\n\nThe reporter process also has a `render` thread (TID 663966) on CPU 3. IRQ 104 overlapped that thread for 74.7 ms. Other CPU 3 activity during `archive`\u2019s scheduled intervals was smaller: local timer vector 236 for 18.9 ms, TIMER softirq for 11.4 ms, SCHED softirq for 4.6 ms, and RCU softirq for 0.2 ms.\n\nThe main `reporter` thread (TID 663964) has little interrupt overlap on CPU 6: about 0.12 ms during its scheduled intervals. CPU 6 had about 35.5 ms of interrupt and softirq time over the whole trace, led by local timers (14.9 ms), NVMe IRQ `nvme0q9` (9.8 ms), and `call_function_single` vectors (5.5 ms). So the interrupt load is concentrated on CPU 3, particularly while the reporter\u2019s `archive` thread runs."
+  }
+ },
+ {
+  "item": "Q26b__batch_server-41b3",
+  "category": "dependency",
+  "question": "Is some thread in batch_server blocked a lot? Which one, and what is it waiting for?",
+  "fault_summary": "at 40% of the run, worker-1 takes lock A then B while worker-3 takes B then A; both block forever, and the coordinator waits forever for the round",
+  "expected": {
+   "where_any": [
+    "worker-1",
+    "worker-3"
+   ],
+   "where_all": [],
+   "cause": "worker-1 holds lock A and waits for B; worker-3 holds B and waits for A; both stay blocked from ~12 s to the end (the coordinator, waiting for them, is a consequence)",
+   "numbers": [],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: yes\n\nIn the whole trace (0\u201330,299 ms), **flusher (TID 626816)** was blocked for 99.3% of its alive time. It remained in a no-timeout `FUTEX_WAIT_BITSET` wait\u2014condition-variable, barrier, or semaphore-like\u2014starting at 12,114.761 ms, for 18,179.657 ms (60.0% of the trace). Its 292 earlier waits had a median of 40.622 ms and a longest of 100.287 ms.\n\nIt wasn\u2019t alone: the main thread and four workers also remained blocked in no-timeout futex waits for roughly 18.17\u201318.18 seconds. The trace reports that worker-1 and worker-3 were waiting on different mutex-style futexes and were never woken, a pattern **consistent with a deadlock**, though the trace cannot show lock ownership or prove it.",
+   "A": "Verdict: yes\n\nThe longest block is `batch_server`\u2019s **watchdog thread, TID 626811** (process PID 626810). On CPU 4 it entered `clock_nanosleep` with `CLOCK_MONOTONIC` and `TIMER_ABSTIME` at 0.089340 s into the trace, then switched out in interruptible state. It was woken on CPU 4 at 30.289323 s; the syscall returned 0 at 30.289349 s, after **30.200 seconds**. It was waiting for its monotonic timer deadline.\n\nOther threads also waited repeatedly: for example, the flusher (TID 626816) made repeated futex waits. The watchdog\u2019s single 30.2-second sleep is the clearest case of a thread blocked for most of the trace."
+  }
+ },
+ {
+  "item": "Q26b__batch_server-940f",
+  "category": "dependency",
+  "question": "Is some thread in batch_server blocked a lot? Which one, and what is it waiting for?",
+  "fault_summary": "the flusher holds cache_lock across a 40 ms sleep every round; worker-2 blocks on cache_lock (futex) and every round waits for worker-2 (batch_server <- worker-2 <- flusher <- timer)",
+  "expected": {
+   "where_any": [
+    "worker-2"
+   ],
+   "where_all": [],
+   "cause": "worker-2 blocks on cache_lock (a futex) every round, because the flusher holds cache_lock across a 40 ms sleep every round",
+   "numbers": [
+    "worker-2 waits ~22 ms per round (\u00b130%)"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "B": "Verdict: no\n\n## What the trace shows\n\n- **TID 624839 (`watchdog`)** was blocked for **99.9% of its alive time** in the trace window **0\u201330,669.961 ms**. Its longest wait was **30,057.761 ms in `clock_nanosleep`**, starting about **99.253 ms** after the trace began. This is an intentional timer sleep, not evidence of a thread stuck waiting for work.\n- Other sampled `batch_server` threads had waits around **100 ms** in `futex`; the waits examined ended when the main `batch_server` thread woke them, consistent with workers waiting for work.\n\nSo there is substantial blocked time, especially for the watchdog, but the measured waits do not show a problematic blockage.",
+   "A": "Verdict: yes\n\n`worker-2` (TID 624842) spent about **21.8 of the 30.7 seconds** blocked, on CPU 3. Its futex waits totalled about 24.2 seconds: 485 `FUTEX_WAIT_BITSET_PRIVATE` calls took 13.0 seconds, and 484 `FUTEX_WAIT_PRIVATE` calls took 11.2 seconds.\n\nThe wakeups point to coordination with other threads: `batch_server` TID 624827 made 485 `FUTEX_WAKE_PRIVATE` calls at the first futex address, each waking a waiter; `flusher` TID 624844 made 484 such calls at the second address, also waking a waiter. This suggests `worker-2` is waiting for work or synchronization signals from those threads. The trace shows the futex addresses and wakeups, but not the user-space condition or queue names.\n\nThe other worker threads also spend roughly 22\u201324 seconds blocked, mostly in futex waits. The main thread (TID 624827) is blocked for about 29.9 seconds, including 19.6 seconds in futex waits and 9.8 seconds in `clock_nanosleep`."
+  }
+ },
+ {
+  "item": "Q27a__kvstore-226c",
+  "category": "dependency",
+  "question": "Is any thread of kvstore blocked for a quarter or more of its time, or for seconds at a time, while it has work to do (not counting idle waits for new work or its own timed sleeps)? If so, which thread, and what is it waiting on?",
+  "fault_summary": "once a second each client tries to reach a replica at 10.255.255.1:7070, which never answers, and waits 300 ms for the connection before giving up: the clients are blocked on the network ~30% of the time",
+  "expected": {
+   "where_any": [
+    "client-0",
+    "client-1",
+    "client-2",
+    "client-3"
+   ],
+   "where_all": [],
+   "cause": "the clients block in connect(): once a second each client tries to connect to a replica at 10.255.255.1:7070, which never answers, and gives up after 300 ms",
+   "numbers": [
+    "~300 ms each time (\u00b120%), once a second"
+   ],
+   "fix_any": []
+  },
+  "answers": {
+   "A": "Verdict: yes\n\n## Work-related blocking\n\nAcross the whole trace (offsets **0\u201330,660.98 ms**), all four client threads were blocked for at least a quarter of their time on network connection attempts:\n\n- **client-0 (TID 649382): 28.4%**\n- **client-1 (TID 649383): 28.4%**\n- **client-2 (TID 649384): 28.4%**\n- **client-3 (TID 649385): 28.4%**\n\nEach made 30 attempts; the 116 attempts overall timed out waiting for an answer from the other side. The mean wait was about **300 ms** and the longest was **300.84 ms**\u2014so these waits meet the quarter-time criterion, but are not seconds long. The trace does not identify the destination address.\n\nThe clients also spent about **68%** of their time in `clock_nanosleep`; those intentional timed sleeps are excluded.",
+   "B": "Verdict: yes\n\nFour `kvstore` tasks spent about 29% of the roughly 30-second run blocked in `poll()` waiting for write readiness:\n\n- TID 649382 on CPU 3 and TID 649384 on CPU 5 polled fd 10.\n- TID 649383 on CPU 4 and TID 649385 on CPU 6 polled fd 11.\n\nEach made 29 polls with a 300 ms timeout. Every call returned 0 without a writable event, taking about 300 ms each and totaling 8.710\u20138.712 seconds per task. During the same interval, each task continued issuing thousands of `recvfrom()` and `sendto()` calls, so these waits occurred amid ongoing I/O work. The trace identifies the file descriptors and requested `POLLOUT` event, but not the remote peer.\n\nSeparately, TID 649379 had a 30.002-second `futex()` wait, followed by a 49.8 ms `futex()` wait and a `wait4()` for TID 649381. The trace does not reveal the futex\u2019s userspace purpose or owner, so I can\u2019t determine whether that wait stalled work or was coordination."
+  }
+ }
+]

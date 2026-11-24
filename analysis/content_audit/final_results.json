@@ -1,0 +1,103 @@
+{
+ "traceassist": {
+  "final": {
+   "partial": 32,
+   "wrong": 5,
+   "full": 23
+  },
+  "final_among_yes": {
+   "partial": 29,
+   "wrong": 4,
+   "full": 23
+  },
+  "location_agreed": {
+   "correct": 52,
+   "disputed": 6,
+   "wrong": 1,
+   "missing": 1
+  },
+  "sources": {
+   "agreed": 49,
+   "grader_1": 7,
+   "grader_2": 3,
+   "neither": 1
+  },
+  "by_category": {
+   "comprehension": {
+    "partial": 4,
+    "wrong": 2,
+    "full": 2
+   },
+   "dependency": {
+    "partial": 8,
+    "wrong": 1,
+    "full": 5
+   },
+   "quantitative": {
+    "full": 5,
+    "partial": 10,
+    "wrong": 2
+   },
+   "remediation": {
+    "partial": 2,
+    "full": 4
+   },
+   "root_cause": {
+    "full": 7,
+    "partial": 8
+   }
+  }
+ },
+ "codex": {
+  "final": {
+   "partial": 33,
+   "wrong": 15,
+   "full": 12
+  },
+  "final_among_yes": {
+   "partial": 32,
+   "wrong": 11,
+   "full": 11
+  },
+  "location_agreed": {
+   "correct": 45,
+   "disputed": 7,
+   "wrong": 5,
+   "missing": 1,
+   "partly": 2
+  },
+  "sources": {
+   "agreed": 53,
+   "grader_1": 4,
+   "grader_2": 1,
+   "neither": 2
+  },
+  "by_category": {
+   "comprehension": {
+    "partial": 5,
+    "wrong": 1,
+    "full": 2
+   },
+   "dependency": {
+    "partial": 7,
+    "wrong": 4,
+    "full": 3
+   },
+   "quantitative": {
+    "full": 2,
+    "partial": 13,
+    "wrong": 2
+   },
+   "remediation": {
+    "wrong": 1,
+    "partial": 1,
+    "full": 4
+   },
+   "root_cause": {
+    "wrong": 7,
+    "partial": 7,
+    "full": 1
+   }
+  }
+ }
+}

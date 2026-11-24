@@ -1,0 +1,492 @@
+{
+ "seed": 20261124,
+ "quota": {
+  "comprehension": 8,
+  "root_cause": 15,
+  "dependency": 14,
+  "quantitative": 17,
+  "remediation": 6
+ },
+ "items": [
+  {
+   "item": "Q11b__pipeline-5c60",
+   "question": "Q11",
+   "wording": "b",
+   "run_id": "pipeline-5c60",
+   "category": "comprehension",
+   "symptom": "idle_workers"
+  },
+  {
+   "item": "Q9b__jobrunner-51ee",
+   "question": "Q9",
+   "wording": "b",
+   "run_id": "jobrunner-51ee",
+   "category": "comprehension",
+   "symptom": "fork_exec_storm"
+  },
+  {
+   "item": "Q7b__filestore-5943",
+   "question": "Q7",
+   "wording": "b",
+   "run_id": "filestore-5943",
+   "category": "comprehension",
+   "symptom": "unexpected_activity"
+  },
+  {
+   "item": "Q6b__jobrunner-72e6",
+   "question": "Q6",
+   "wording": "b",
+   "run_id": "jobrunner-72e6",
+   "category": "comprehension",
+   "symptom": "never_exits"
+  },
+  {
+   "item": "Q11a__pipeline-5c60",
+   "question": "Q11",
+   "wording": "a",
+   "run_id": "pipeline-5c60",
+   "category": "comprehension",
+   "symptom": "idle_workers"
+  },
+  {
+   "item": "Q3a__filestore-4ca4",
+   "question": "Q3",
+   "wording": "a",
+   "run_id": "filestore-4ca4",
+   "category": "comprehension",
+   "symptom": "failing_retry_loop"
+  },
+  {
+   "item": "Q5a__jobrunner-7489",
+   "question": "Q5",
+   "wording": "a",
+   "run_id": "jobrunner-7489",
+   "category": "comprehension",
+   "symptom": "crash"
+  },
+  {
+   "item": "Q4a__filestore-44a7",
+   "question": "Q4",
+   "wording": "a",
+   "run_id": "filestore-44a7",
+   "category": "comprehension",
+   "symptom": "file_churn"
+  },
+  {
+   "item": "Q31b__batch_server-9026",
+   "question": "Q31",
+   "wording": "b",
+   "run_id": "batch_server-9026",
+   "category": "dependency",
+   "symptom": "lock_contention"
+  },
+  {
+   "item": "Q26b__batch_server-940f",
+   "question": "Q26",
+   "wording": "b",
+   "run_id": "batch_server-940f",
+   "category": "dependency",
+   "symptom": "long_blocked_waits"
+  },
+  {
+   "item": "Q27b__kvstore-226c",
+   "question": "Q27",
+   "wording": "b",
+   "run_id": "kvstore-226c",
+   "category": "dependency",
+   "symptom": "long_blocked_waits"
+  },
+  {
+   "item": "Q30b__batch_server-41b3",
+   "question": "Q30",
+   "wording": "b",
+   "run_id": "batch_server-41b3",
+   "category": "dependency",
+   "symptom": "deadlock"
+  },
+  {
+   "item": "Q27a__kvstore-226c",
+   "question": "Q27",
+   "wording": "a",
+   "run_id": "kvstore-226c",
+   "category": "dependency",
+   "symptom": "long_blocked_waits"
+  },
+  {
+   "item": "Q26b__batch_server-41b3",
+   "question": "Q26",
+   "wording": "b",
+   "run_id": "batch_server-41b3",
+   "category": "dependency",
+   "symptom": "long_blocked_waits"
+  },
+  {
+   "item": "Q35b__pipeline-f460",
+   "question": "Q35",
+   "wording": "b",
+   "run_id": "pipeline-f460",
+   "category": "dependency",
+   "symptom": "producer_consumer_mismatch"
+  },
+  {
+   "item": "Q33a__batch_server-1f3b",
+   "question": "Q33",
+   "wording": "a",
+   "run_id": "batch_server-1f3b",
+   "category": "dependency",
+   "symptom": "priority_inversion"
+  },
+  {
+   "item": "Q29b__filestore-b20a",
+   "question": "Q29",
+   "wording": "b",
+   "run_id": "filestore-b20a",
+   "category": "dependency",
+   "symptom": "waiting_on_disk"
+  },
+  {
+   "item": "Q29a__filestore-a94e",
+   "question": "Q29",
+   "wording": "a",
+   "run_id": "filestore-a94e",
+   "category": "dependency",
+   "symptom": "waiting_on_disk"
+  },
+  {
+   "item": "Q31a__batch_server-9613",
+   "question": "Q31",
+   "wording": "a",
+   "run_id": "batch_server-9613",
+   "category": "dependency",
+   "symptom": "lock_contention"
+  },
+  {
+   "item": "Q28a__kvstore-5311",
+   "question": "Q28",
+   "wording": "a",
+   "run_id": "kvstore-5311",
+   "category": "dependency",
+   "symptom": "waiting_on_network"
+  },
+  {
+   "item": "Q31a__batch_server-9026",
+   "question": "Q31",
+   "wording": "a",
+   "run_id": "batch_server-9026",
+   "category": "dependency",
+   "symptom": "lock_contention"
+  },
+  {
+   "item": "Q29a__filestore-b20a",
+   "question": "Q29",
+   "wording": "a",
+   "run_id": "filestore-b20a",
+   "category": "dependency",
+   "symptom": "waiting_on_disk"
+  },
+  {
+   "item": "Q49b__crunch-a6c0",
+   "question": "Q49",
+   "wording": "b",
+   "run_id": "crunch-a6c0",
+   "category": "quantitative",
+   "symptom": "thread_differences"
+  },
+  {
+   "item": "Q49b__crunch-d97e",
+   "question": "Q49",
+   "wording": "b",
+   "run_id": "crunch-d97e",
+   "category": "quantitative",
+   "symptom": "thread_differences"
+  },
+  {
+   "item": "Q44a__kvstore-768d",
+   "question": "Q44",
+   "wording": "a",
+   "run_id": "kvstore-768d",
+   "category": "quantitative",
+   "symptom": "tail_latency"
+  },
+  {
+   "item": "Q45b__crunch-3329",
+   "question": "Q45",
+   "wording": "b",
+   "run_id": "crunch-3329",
+   "category": "quantitative",
+   "symptom": "cpu_hog"
+  },
+  {
+   "item": "Q37a__ticker-8584",
+   "question": "Q37",
+   "wording": "a",
+   "run_id": "ticker-8584",
+   "category": "quantitative",
+   "symptom": "jitter"
+  },
+  {
+   "item": "Q41a__crunch-a270",
+   "question": "Q41",
+   "wording": "a",
+   "run_id": "crunch-a270",
+   "category": "quantitative",
+   "symptom": "scheduling_delay"
+  },
+  {
+   "item": "Q45b__crunch-a068",
+   "question": "Q45",
+   "wording": "b",
+   "run_id": "crunch-a068",
+   "category": "quantitative",
+   "symptom": "cpu_hog"
+  },
+  {
+   "item": "Q48b__batch_server-940f",
+   "question": "Q48",
+   "wording": "b",
+   "run_id": "batch_server-940f",
+   "category": "quantitative",
+   "symptom": "thread_differences"
+  },
+  {
+   "item": "Q38a__ticker-2ea7",
+   "question": "Q38",
+   "wording": "a",
+   "run_id": "ticker-2ea7",
+   "category": "quantitative",
+   "symptom": "gradual_slowdown"
+  },
+  {
+   "item": "Q40b__ticker-8584",
+   "question": "Q40",
+   "wording": "b",
+   "run_id": "ticker-8584",
+   "category": "quantitative",
+   "symptom": "scheduling_delay"
+  },
+  {
+   "item": "Q46b__crunch-a6c0",
+   "question": "Q46",
+   "wording": "b",
+   "run_id": "crunch-a6c0",
+   "category": "quantitative",
+   "symptom": "load_imbalance"
+  },
+  {
+   "item": "Q48a__batch_server-940f",
+   "question": "Q48",
+   "wording": "a",
+   "run_id": "batch_server-940f",
+   "category": "quantitative",
+   "symptom": "thread_differences"
+  },
+  {
+   "item": "Q41b__crunch-a270",
+   "question": "Q41",
+   "wording": "b",
+   "run_id": "crunch-a270",
+   "category": "quantitative",
+   "symptom": "scheduling_delay"
+  },
+  {
+   "item": "Q49a__crunch-d97e",
+   "question": "Q49",
+   "wording": "a",
+   "run_id": "crunch-d97e",
+   "category": "quantitative",
+   "symptom": "thread_differences"
+  },
+  {
+   "item": "Q40b__ticker-1759",
+   "question": "Q40",
+   "wording": "b",
+   "run_id": "ticker-1759",
+   "category": "quantitative",
+   "symptom": "scheduling_delay"
+  },
+  {
+   "item": "Q48a__batch_server-1f3b",
+   "question": "Q48",
+   "wording": "a",
+   "run_id": "batch_server-1f3b",
+   "category": "quantitative",
+   "symptom": "thread_differences"
+  },
+  {
+   "item": "Q46a__crunch-a6c0",
+   "question": "Q46",
+   "wording": "a",
+   "run_id": "crunch-a6c0",
+   "category": "quantitative",
+   "symptom": "load_imbalance"
+  },
+  {
+   "item": "Q52a__filestore-2d10",
+   "question": "Q52",
+   "wording": "a",
+   "run_id": "filestore-2d10",
+   "category": "remediation",
+   "symptom": "idle_polling"
+  },
+  {
+   "item": "Q54b__batch_server-940f",
+   "question": "Q54",
+   "wording": "b",
+   "run_id": "batch_server-940f",
+   "category": "remediation",
+   "symptom": "lock_holder_blocking"
+  },
+  {
+   "item": "Q55a__crunch-626c",
+   "question": "Q55",
+   "wording": "a",
+   "run_id": "crunch-626c",
+   "category": "remediation",
+   "symptom": "oversubscription"
+  },
+  {
+   "item": "Q56b__pipeline-394e",
+   "question": "Q56",
+   "wording": "b",
+   "run_id": "pipeline-394e",
+   "category": "remediation",
+   "symptom": "thundering_herd"
+  },
+  {
+   "item": "Q54a__batch_server-940f",
+   "question": "Q54",
+   "wording": "a",
+   "run_id": "batch_server-940f",
+   "category": "remediation",
+   "symptom": "lock_holder_blocking"
+  },
+  {
+   "item": "Q51b__filestore-2188",
+   "question": "Q51",
+   "wording": "b",
+   "run_id": "filestore-2188",
+   "category": "remediation",
+   "symptom": "many_small_calls"
+  },
+  {
+   "item": "Q16a__crunch-a6c0",
+   "question": "Q16",
+   "wording": "a",
+   "run_id": "crunch-a6c0",
+   "category": "root_cause",
+   "symptom": "bottleneck_thread"
+  },
+  {
+   "item": "Q18b__kvstore-4bd0",
+   "question": "Q18",
+   "wording": "b",
+   "run_id": "kvstore-4bd0",
+   "category": "root_cause",
+   "symptom": "bottleneck_thread"
+  },
+  {
+   "item": "Q22b__crunch-a270",
+   "question": "Q22",
+   "wording": "b",
+   "run_id": "crunch-a270",
+   "category": "root_cause",
+   "symptom": "barrier_straggler"
+  },
+  {
+   "item": "Q17b__pipeline-6056",
+   "question": "Q17",
+   "wording": "b",
+   "run_id": "pipeline-6056",
+   "category": "root_cause",
+   "symptom": "bottleneck_thread"
+  },
+  {
+   "item": "Q23a__reporter-285d",
+   "question": "Q23",
+   "wording": "a",
+   "run_id": "reporter-285d",
+   "category": "root_cause",
+   "symptom": "interrupt_storm"
+  },
+  {
+   "item": "Q19b__batch_server-41b3",
+   "question": "Q19",
+   "wording": "b",
+   "run_id": "batch_server-41b3",
+   "category": "root_cause",
+   "symptom": "hang"
+  },
+  {
+   "item": "Q14a__jobrunner-0dd3",
+   "question": "Q14",
+   "wording": "a",
+   "run_id": "jobrunner-0dd3",
+   "category": "root_cause",
+   "symptom": "slow_shutdown"
+  },
+  {
+   "item": "Q16a__crunch-4b6e",
+   "question": "Q16",
+   "wording": "a",
+   "run_id": "crunch-4b6e",
+   "category": "root_cause",
+   "symptom": "bottleneck_thread"
+  },
+  {
+   "item": "Q16a__crunch-a270",
+   "question": "Q16",
+   "wording": "a",
+   "run_id": "crunch-a270",
+   "category": "root_cause",
+   "symptom": "bottleneck_thread"
+  },
+  {
+   "item": "Q23b__reporter-285d",
+   "question": "Q23",
+   "wording": "b",
+   "run_id": "reporter-285d",
+   "category": "root_cause",
+   "symptom": "interrupt_storm"
+  },
+  {
+   "item": "Q16b__crunch-4b6e",
+   "question": "Q16",
+   "wording": "b",
+   "run_id": "crunch-4b6e",
+   "category": "root_cause",
+   "symptom": "bottleneck_thread"
+  },
+  {
+   "item": "Q17a__pipeline-6056",
+   "question": "Q17",
+   "wording": "a",
+   "run_id": "pipeline-6056",
+   "category": "root_cause",
+   "symptom": "bottleneck_thread"
+  },
+  {
+   "item": "Q22b__crunch-4b6e",
+   "question": "Q22",
+   "wording": "b",
+   "run_id": "crunch-4b6e",
+   "category": "root_cause",
+   "symptom": "barrier_straggler"
+  },
+  {
+   "item": "Q22a__crunch-4b6e",
+   "question": "Q22",
+   "wording": "a",
+   "run_id": "crunch-4b6e",
+   "category": "root_cause",
+   "symptom": "barrier_straggler"
+  },
+  {
+   "item": "Q15a__batch_server-940f",
+   "question": "Q15",
+   "wording": "a",
+   "run_id": "batch_server-940f",
+   "category": "root_cause",
+   "symptom": "bottleneck_thread"
+  }
+ ]
+}

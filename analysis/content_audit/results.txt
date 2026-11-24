@@ -1,0 +1,10 @@
+traceassist grader=codex  overall {'partial': 35, 'full': 20, 'wrong': 5} location {'correct': 55, 'wrong': 1, 'missing': 4}
+traceassist grader=claude overall {'partial': 26, 'full': 27, 'wrong': 7} location {'correct': 53, 'partly': 5, 'wrong': 1, 'missing': 1}
+traceassist: overall agreement 49/60, kappa 0.69
+codex       grader=codex  overall {'partial': 35, 'wrong': 14, 'full': 11} location {'correct': 46, 'missing': 7, 'wrong': 5, 'partly': 2}
+codex       grader=claude overall {'partial': 28, 'wrong': 15, 'full': 17} location {'correct': 45, 'wrong': 8, 'partly': 6, 'missing': 1}
+codex: overall agreement 53/60, kappa 0.81
+traceassist: consensus on 49 items: {'partial': 25, 'full': 20, 'wrong': 4}
+codex: consensus on 53 items: {'partial': 28, 'wrong': 14, 'full': 11}
+traceassist: yes-verdicts per codex grader 56; full by codex-grader 20, by claude-grader 27
+codex: yes-verdicts per codex grader 54; full by codex-grader 10, by claude-grader 16
